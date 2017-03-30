@@ -1,16 +1,12 @@
-<<<<<<< HEAD
 
 var searchMarker;
 
-=======
->>>>>>> origin/vehiclefinding
+
 $(document).ready(function(){
 
 	console.log("Home.js Ready");
 
 	$("#search-box").keydown(function(e){
-<<<<<<< HEAD
-
 		if(e.key == "Enter"){ //Search For Input
 			searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
 				$("#search-suggestions").hide();
@@ -83,38 +79,6 @@ $(document).ready(function(){
 		searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
 				$("#search-suggestions").hide();
 				var places = data.places;
-=======
-		$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
-			console.log("SUCCESS", data);
-			var places = data.places;
-			if(places.length > 0){
-				$("#search-list").html("");
-				$("#search-suggestions").show();
-
-				for(var x in places){
-					var place = places[x];
-					var description = place.description;
-					var item = "<li style=\"border-bottom: 1px solid grey;\">" + description + "</li>";
-
-					if(description){
-						$("#search-list").append(item);
-					}
-				}
-			}else{
-				$("#search-suggestions").hide();
-			}
-
-
-		});
-	});
-
-	$("#search-bar-button").click(function(){
-		$.get( "/api/places/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
-			console.log("SUCCESS", data);
-			var places = data.places;
-			if(places.length > 0){
-				$("#search-suggestions").hide();
->>>>>>> origin/vehiclefinding
 
 				for(var x in places){
 					var place = places[x];
@@ -123,7 +87,6 @@ $(document).ready(function(){
 					var form_addr = place.formatted_address;
 					var location = place.geometry.location;
 
-<<<<<<< HEAD
 					map.setCenter(location);
 
 					//Info Window HTML
@@ -158,33 +121,6 @@ $(document).ready(function(){
 		})
 	});
 
-});
-
-
-var searchPlace = function(input, callback){
-	$.get( "/api/places/" + input, function( data ) {
-		var places = data.places;
-		if(places.length > 0){
-			callback(data);
-		}
-	});
-}
-=======
-
-					var marker = new google.maps.Marker({
-						position: location,
-						map: map,
-						title: name
-					});
-
-					map.setCenter(location);
-				}
-			}
-
-		});
-	});
-
-
 	var markers = []; // Markers for the busses current locations
 	initVehicles();	// Initializes all vehile markers on the map
 
@@ -210,6 +146,17 @@ var searchPlace = function(input, callback){
 
 });
 
+
+var searchPlace = function(input, callback){
+	$.get( "/api/places/" + input, function( data ) {
+		var places = data.places;
+		if(places.length > 0){
+			callback(data);
+		}
+	});
+}
+
+
 // Initializes all vehile markers on the map
 function initVehicles() {
 	$.get( "/api/vehicles?agencies=283", function( data ) {
@@ -232,4 +179,3 @@ function initVehicles() {
 			}
 	});
 }
->>>>>>> origin/vehiclefinding
