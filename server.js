@@ -6,7 +6,7 @@ var app = express();
 
 //  Connect all our routes to our application
 app.use(express.static('public'));
-app.use('/', routes);
+app.use('/api/', routes);
 
 // Turn on the server!
 app.listen(3000, () => {

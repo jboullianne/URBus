@@ -19,8 +19,13 @@
   },
   "homepage": "https://github.com/jboullianne/URBus#readme",
   "dependencies": {
+    "@google/maps": "^0.3.1",
+    "apicache": "^0.8.4",
     "express": "^4.14.1",
-    "forever": "^0.15.3"
+    "forever": "^0.15.3",
+    "pg": "^6.1.5",
+    "twilio": "^2.11.1",
+    "unirest": "^0.5.1"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"

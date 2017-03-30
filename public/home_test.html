@@ -1,0 +1,142 @@
+<html>
+<head>
+
+	<title>URBus | Home Test</title>
+
+	<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+	<style>
+    	#map {
+    		height: 100%;
+    		width: 100%;
+    		position: absolute;
+    		z-index: 0;
+    	}
+
+    	.content {
+    		z-index: 2;
+    		padding: 1em;
+    	}
+
+    	#search-box:focus {
+    		outline: none;
+    	}
+
+    	.fa {
+    		font-size: 1.2em;
+    		cursor: pointer;
+    	}
+
+    	.fa:hover {
+    		color: #679df6 !important;
+    	}
+    </style>
+
+</head>
+
+<body>
+
+	<div class="test">
+	    <div id="map"></div>
+	    <script>
+	      function initMap() {
+	        var uluru = {lat: 43.128397, lng: -77.628681};
+	        var map = new google.maps.Map(document.getElementById('map'), {
+	          zoom: 15,
+	          center: uluru,
+	          disableDefaultUI: true,
+	          clickableIcons: false
+	        });
+	        /*
+	        var marker = new google.maps.Marker({
+	          position: uluru,
+	          map: map
+	        });
+*/
+	      }
+	    </script>
+	    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfWoPWJw8uWXprI_uL3D1TQ10Df-atWkY&callback=initMap"></script>
+
+	    <div class="content">
+
+	    	<div class="row">
+
+	    		<!-- Search Box Container -->
+	    		<div class="col-md-2" style="background-color: #ffffff; border-radius: 0.2em; margin-left:1em;">
+	    			<div style="display:flex;justify-content:center;align-items:center;height:4em;">
+					  	<div class="col-md-1" style="">
+			    			<i class="fa fa-bars" aria-hidden="true" style="color: grey;"></i>
+			    		</div>
+			    		<div class="col-md-9">
+			    			<input type="text" id="search-box" placeholder="Search for..." style="border: none; border-radius: 0; font-size: 1.2em; width: 100%">
+			    		</div>
+			    		<div class="col-md-1" style="">
+			    			<i class="fa fa-search" aria-hidden="true" style="color: grey;"></i>
+			    		</div>
+			    		<div class="col-md-1" style="border-right: 1px solid grey; height: 1em; padding-left: 0; padding-right: 0; width: 1em;">
+			    		</div>
+			    		<div class="col-md-1">
+			    			<i class="fa fa-map-signs" aria-hidden="true" style="color: grey;"></i>
+			    		</div>
+					</div>
+					<hr style="margin-top: 0; margin-bottom: 0;">
+					<div id="search-suggestions" class="col-md-12" style="margin-top: 1em; font-size: 1em; display:none;">
+			    		<ul id="search-list" style="list-style: none; padding-left: 1em;">
+			    			
+			    		</ul>
+			    	<div>
+
+	    		</div>
+	    		<!-- End Search Box Container -->
+
+
+	    		<script type="text/javascript">
+
+	    			$(document).ready(function(){
+						$("#search-box").keydown(function(e){
+							$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
+								console.log("SUCCESS", data);
+								var places = data.places;
+								if(places.length > 0){
+									$("#search-list").html("");
+									$("#search-suggestions").show();
+
+									for(var x in places){
+										var place = places[x];
+										var description = place.description;
+										var item = "<li style=\"border-bottom: 1px solid grey\">" + description + "</li>";
+
+										if(description){
+											$("#search-list").append(item);
+										}
+									}
+								}else{
+									$("#search-suggestions").hide();
+								}
+
+								
+							});
+						});
+					});
+
+	    		</script>
+
+	    	</div>
+
+	   	</div>
+	</div>
+
+</body>
+
+</html>

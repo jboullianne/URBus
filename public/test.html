@@ -1,0 +1,95 @@
+<html>
+<head>
+
+	<title>Endpoint Test Page</title>
+
+	<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+	<div class="container">
+		
+		<div class="row">
+			<h3>Endpoint Test Page</h3>
+			<hr>
+			<div class="col-md-4">
+			    <input id="input1" type="text" class="form-control" placeholder="Search / Starting Point">
+			    <input id="autocomplete" type="checkbox" name="autocomplete" value="autocomplete"> Autocomplete Input (Searches Places)<br>
+			</div>
+			<div class="col-md-4">
+			    <input id="input2" type="text" class="form-control" placeholder="Destination (optional)">
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-md-8">
+				<div class="well" id="results-well">
+				</div>
+			</div>
+			<div class="col-md-4">
+				<button id="geocode-loc" class="btn btn-primary">Geocode Address</button>
+				<button id="search-loc" class="btn btn-primary">Places Search</button>
+				<button id="directions" class="btn btn-primary">Get Directions</button>
+			</div>
+
+		</div>
+	
+
+	</div>
+
+	<script type="text/javascript">
+
+		$(document).ready(function(){
+			$("#input1").keydown(function(e){
+				if($("#autocomplete").is(':checked')){
+					$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#input1").val()), function( data ) {
+						console.log("SUCCESS", data);
+						$("#results-well" ).html( JSON.stringify(data, null, 2));
+					});
+				}
+				
+			});
+		});
+
+		// Geocode Address
+		$("#geocode-loc").click(function(){
+			console.log("LOOKUP LOCATION");
+			$.get( "/api/geocode/" + encodeURIComponent($("#input1").val()), function( data ) {
+				console.log("SUCCESS", data);
+				$("#results-well" ).html( JSON.stringify(data, null, 2));
+			});
+		});
+
+		//Location Search
+		$("#search-loc").click(function(){
+			console.log("LOOKUP LOCATION");
+			$.get( "/api/places/" + encodeURIComponent($("#input1").val()), function( data ) {
+				console.log("SUCCESS", data);
+				$("#results-well" ).html( JSON.stringify(data, null, 2));
+			});
+		});
+
+		//Google Directions Search
+		$("#directions").click(function(){
+			console.log("LOOKUP LOCATION");
+			$.get( "/api/gDirections/" + encodeURIComponent($("#input1").val()) + "/" + encodeURIComponent($("#input2").val()), function( data ) {
+				console.log("SUCCESS", data);
+				$("#results-well" ).html( JSON.stringify(data, null, 2));
+			});
+		});
+	</script>
+
+</body>
+
+</html>
