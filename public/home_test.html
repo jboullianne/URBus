@@ -14,6 +14,9 @@
 	<!-- Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+	<script src="js/home.js"></script>
+
+
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
 	<style>
@@ -57,7 +60,7 @@
 	          zoom: 15,
 	          center: uluru,
 	          disableDefaultUI: true,
-	          clickableIcons: false
+	          clickableIcons: true
 	        });
 	        
 	      }
@@ -122,58 +125,11 @@
 							});
 	        			}, 2000);
 						*/
+
+
 	        			
 
-						$("#search-box").keydown(function(e){
-							$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
-								console.log("SUCCESS", data);
-								var places = data.places;
-								if(places.length > 0){
-									$("#search-list").html("");
-									$("#search-suggestions").show();
-
-									for(var x in places){
-										var place = places[x];
-										var description = place.description;
-										var item = "<li style=\"border-bottom: 1px solid grey\">" + description + "</li>";
-
-										if(description){
-											$("#search-list").append(item);
-										}
-									}
-								}else{
-									$("#search-suggestions").hide();
-								}
-
-								
-							});
-						});
-
-						$("#search-bar-button").click(function(){
-							$.get( "/api/places/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
-								console.log("SUCCESS", data);
-								var places = data.places;
-								if(places.length > 0){
-									$("#search-list").html("");
-									$("#search-suggestions").show();
-
-									for(var x in places){
-										var place = places[x];
-										var name = place.name;
-										var form_addr = place.formatted_address;
-										var item = "<li style=\"border-bottom: 1px solid grey\">" + name + "</li>";
-
-										if(description){
-											$("#search-list").append(item);
-										}
-									}
-								}else{
-									$("#search-suggestions").hide();
-								}
-
-								
-							});
-						});
+						
 					});
 
 	    		</script>
