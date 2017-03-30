@@ -263,11 +263,15 @@ router.get('/places/:query', cache('5 minutes'), (req, res) => {
 		OPTIONAL:
 			query	(STRING): A search query to find a possible place in Google's Places Database
 */
-router.get('/placesAutoComplete/:query', cache('1 minute'), (req, res) => {
+router.get('/placesAutoComplete/:query', (req, res) => {
 	var query = req.params.query;
+	console.log("AUTOComplete:", query);
+	/*
 	directions.autoCompletePlace(query, function(data){
 		res.status(200).json({"places" : data});
 	});
+	*/
+	res.status(200).json({"places" : []});
 });
 
 /*	
