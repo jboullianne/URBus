@@ -1,5 +1,6 @@
 
 var searchMarker;
+var markers = []; // Markers for the busses current locations
 
 
 $(document).ready(function(){
@@ -121,7 +122,7 @@ $(document).ready(function(){
 		})
 	});
 
-	var markers = []; // Markers for the busses current locations
+	
 	initVehicles();	// Initializes all vehile markers on the map
 
 	var vehicleUpdater = setInterval(function(){
@@ -135,11 +136,13 @@ $(document).ready(function(){
 						var id = vehicle.vehicle_id;
 						var newLocation = vehicle.location;
 						// Find marker with matching ID and update it's position
-						for(var marker in markers) {
+						for(var x in markers) {
+							var marker = markers[x]
 							if(marker.title == id) {
-								marker.position = newLocation;
+								marker.setPosition(newLocation);
 							}
 						}
+					}
 				}
 		});
 	}, 2000);
@@ -164,17 +167,18 @@ function initVehicles() {
 			var vehicles = data.vehicles.data["283"];
 			if(vehicles.length > 0){
 
-				for(var vehicle in vehicles){
+				for(var x in vehicles){
+					var vehicle = vehicles[x];
 					var location = vehicle.location;
-
+					console.log("location", location);
 					var marker = new google.maps.Marker({
 						 position: location,
 						 map: map,
-						 icon: "img/bus-side-view.svg",
+						 //icon: "img/bus-side-view.svg",
 						 title: vehicle.vehicle_id
-					  });
+					});
 
-					  markers.push(marker); // Add to list of markers
+					markers.push(marker); // Add to list of markers
 				}
 			}
 	});
