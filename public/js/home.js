@@ -22,9 +22,9 @@ $(document).ready(function(){
 					map.setCenter(location);
 
 					//Info Window HTML
-					var contentString = '<div id="content">' + 
-											'<div id="siteNotice">' + 
-											'</div>' + 
+					var contentString = '<div id="content">' +
+											'<div id="siteNotice">' +
+											'</div>' +
 											'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
 											'<small>' + form_addr + '</small>'+
 										'</div>';
@@ -40,7 +40,7 @@ $(document).ready(function(){
 						map: map,
 						title: name,
 						animation: google.maps.Animation.DROP,
-					});	
+					});
 
 					//Open info Window and Add Listener
 					infowindow.open(map, searchMarker);
@@ -48,7 +48,7 @@ $(document).ready(function(){
 						infowindow.open(map, searchMarker);
 					});
 
-					
+
 				}
 			})
 		}else{
@@ -91,9 +91,9 @@ $(document).ready(function(){
 					map.setCenter(location);
 
 					//Info Window HTML
-					var contentString = '<div id="content">' + 
-											'<div id="siteNotice">' + 
-											'</div>' + 
+					var contentString = '<div id="content">' +
+											'<div id="siteNotice">' +
+											'</div>' +
 											'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
 											'<small>' + form_addr + '</small>'+
 										'</div>';
@@ -109,7 +109,7 @@ $(document).ready(function(){
 						map: map,
 						title: name,
 						animation: google.maps.Animation.DROP,
-					});	
+					});
 
 					//Open info Window and Add Listener
 					infowindow.open(map, searchMarker);
@@ -117,12 +117,12 @@ $(document).ready(function(){
 						infowindow.open(map, searchMarker);
 					});
 
-					
+
 				}
 		})
 	});
 
-	
+
 	initVehicles();	// Initializes all vehile markers on the map
 
 	var vehicleUpdater = setInterval(function(){
@@ -166,20 +166,56 @@ function initVehicles() {
 			console.log("SUCCESS", data);
 			var vehicles = data.vehicles.data["283"];
 			if(vehicles.length > 0){
-
 				for(var x in vehicles){
 					var vehicle = vehicles[x];
 					var location = vehicle.location;
 					console.log("location", location);
 					var marker = new google.maps.Marker({
 						 position: location,
-						 map: map,
+						 map: map, // Makes it appear on the map
 						 //icon: "img/bus-side-view.svg",
 						 title: vehicle.vehicle_id
 					});
 
+					// Info Window for each bus icon
+					var contentString = '<div id="content">' +
+											'<div id="siteNotice">' +
+											'</div>' +
+											'<h5 id="firstHeading" class="firstHeading style="color:#' + routeTable[vehicle.vehicle_id][0] +
+											'">' + vehicle.long_name + '</h5>' +
+										'</div>';
+
+					var infowindow = new google.maps.InfoWindow({
+						content: contentString
+					});
+					// Show the label when icon is clicked on
+					marker.addListener('click', function() {
+						infowindow.open(map, marker);
+					});
+					// Save marker for later updating (instead of recreating each time)
 					markers.push(marker); // Add to list of markers
 				}
 			}
 	});
 }
+
+// Assosciates the route_id with the color and name of the line
+var routeTable = {"4004546" : ["fffc66","Scottsville Rd Lot"],
+						"4004558" : ["694489","Corporate Woods"],
+						"4004562" : ["2de3e0","MC Staff"],
+						"4005038" : ["0c010f","Goler-Whipple Shuttle"],
+						"4006218" : ["1ba0a0","College Town Express"],
+						"4006658" : ["ffabf9","Admissions"],
+						"4007436" : ["808080","City of Rochester Tour"],
+						"4007476" : ["f00c93","Highland Hospital"],
+						"4008380" : ["ff0000","Red Line"],
+						"4008382" : ["0f29f2","Blue Line"],
+						"4008384" : ["f07205","Orange Line"],
+						"4008386" : ["706868","Silver Line"],
+						"4008388" : ["a1a10b","Gold Line - Riverview Direct"],
+						"4008390" : ["a1a10b","Gold Line - 19th Ward"],
+						"4008392" : ["07910c","Green Line - Pittsford Plaza"],
+						"4008394" : ["07910c","Green Line - College Town & Tops"],
+						"4008396" : ["07910c","Green Line - Marketplace"],
+						"4008398" : ["07910c","Green Line - Public Market"],
+						"4009446" : ["b600ff","Orange/Blue Line"]};
