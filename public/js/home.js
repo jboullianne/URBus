@@ -138,14 +138,14 @@ $(document).ready(function(){
 						// Find marker with matching ID and update it's position
 						for(var x in markers) {
 							var marker = markers[x]
-							if(marker.title == id) {
+							if(marker.id == id) {
 								marker.setPosition(newLocation);
 							}
 						}
 					}
 				}
 		});
-	}, 2000);
+	}, 1500);
 
 });
 
@@ -174,7 +174,8 @@ function initVehicles() {
 						 position: location,
 						 map: map, // Makes it appear on the map
 						 //icon: "img/bus-side-view.svg",
-						 title: vehicle.vehicle_id
+						 id: vehicle.vehicle_id,
+						 title: routeTable[vehicle.route_id][1] // Long-Name is title
 					});
 
 					// Info Window for each bus icon
@@ -188,10 +189,12 @@ function initVehicles() {
 					var infowindow = new google.maps.InfoWindow({
 						content: contentString
 					});
+
 					// Show the label when icon is clicked on
 					marker.addListener('click', function() {
 						infowindow.open(map, marker);
 					});
+
 					// Save marker for later updating (instead of recreating each time)
 					markers.push(marker); // Add to list of markers
 				}
