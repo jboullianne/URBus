@@ -181,8 +181,8 @@ function initVehicles() {
 					var contentString = '<div id="content">' +
 											'<div id="siteNotice">' +
 											'</div>' +
-											'<h5 id="firstHeading" class="firstHeading style="color:#' + routeTable[vehicle.vehicle_id][0] +
-											'">' + vehicle.long_name + '</h5>' +
+											'<h5 id="firstHeading" class="firstHeading style="color:#' + routeTable[vehicle.route_id][0] +
+											'">' + routeTable[vehicle.route_id][1] + '</h5>' +
 										'</div>';
 
 					var infowindow = new google.maps.InfoWindow({
