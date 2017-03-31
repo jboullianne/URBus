@@ -1,6 +1,7 @@
 
 var searchMarker;
 var markers = []; // Markers for the busses current locations
+var infowindows = [];
 
 
 $(document).ready(function(){
@@ -185,19 +186,26 @@ function initVehicles() {
 											'<h5 id="firstHeading" class="firstHeading style="color:#' + routeTable[vehicle.route_id][0] +
 											'">' + routeTable[vehicle.route_id][1] + '</h5>' +
 										'</div>';
-
 					var infowindow = new google.maps.InfoWindow({
 						content: contentString
 					});
 
 					// Show the label when icon is clicked on
-					marker.addListener('click', function() {
-						infowindow.open(map, marker);
-					});
+					// marker.addListener('click', function() {
+					// 	infowindow.open(map, marker);
+					// });
 
 					// Save marker for later updating (instead of recreating each time)
 					markers.push(marker); // Add to list of markers
+					infowindows.push(infowindow);
 				}
+
+				for(var x in markers) {
+					markers[x].addListener('click', function() {
+						infowindows[x].open(map, markers[x]);
+					})
+				}
+
 			}
 	});
 }
