@@ -35,18 +35,18 @@ module.exports = {
 				callback(response.json.predictions);
 			}
 		});
-	},
-
-	directionsGoogle: function(origin, destination, callback){
-		googleMapsClient.directions({
-			origin: origin,
-			destination: destination
-		}, function(err, response) {
-			console.log(err);
-			if(!err) {
-				callback(response.json);
-			}
-		});
 	}
+   //,
+	// directionsGoogle: function(origin, destination, callback){
+	// 	googleMapsClient.directions({
+	// 		origin: origin,
+	// 		destination: destination
+	// 	}, function(err, response) {
+	// 		console.log(err);
+	// 		if(!err) {
+	// 			callback(response.json);
+	// 		}
+	// 	});
+	// }
 
 }

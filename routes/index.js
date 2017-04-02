@@ -11,13 +11,13 @@ var path 		= require('path');
 var directions 	= require('./directions');
 
 
-// Twilio Credentials 
-var accountSid = 'ACad272d651a8326e184bd69d76a7882f1'; 
-var authToken = '2e6bb9d88d4897342352cf9607c9dd7a'; 
- 
-//require the Twilio module and create a REST client 
-var client = require('twilio')(accountSid, authToken); 
- 
+// Twilio Credentials
+var accountSid = 'ACad272d651a8326e184bd69d76a7882f1';
+var authToken = '2e6bb9d88d4897342352cf9607c9dd7a';
+
+//require the Twilio module and create a REST client
+var client = require('twilio')(accountSid, authToken);
+
 
 
 
@@ -37,20 +37,20 @@ router.get('/', (req, res) => {
 //Test SMS Endpoint
 router.get('/sms/:phone', (req, res) => {
 	var phone = req.params.phone;
-	client.messages.create({ 
-	    to: phone, 
-	    from: "+12403481169", 
-	    body: "Test Twilio Message", 
-	    //mediaUrl: "https://c1.staticflickr.com/3/2899/14341091933_1e92e62d12_b.jpg",  
-	}, function(err, message) { 
-	    console.log(message.sid); 
+	client.messages.create({
+	    to: phone,
+	    from: "+12403481169",
+	    body: "Test Twilio Message",
+	    //mediaUrl: "https://c1.staticflickr.com/3/2899/14341091933_1e92e62d12_b.jpg",
+	}, function(err, message) {
+	    console.log(message.sid);
 	});
 	res.status(200).json({"success" : true});
 });
 
 
 
-/*	
+/*
 	ABOUT: Contains a list of agencies, along with their properties.
 	PARAMS:
 		REQUIRED: NONE
@@ -59,7 +59,7 @@ router.get('/sms/:phone', (req, res) => {
 */
 router.get('/agencies', cache("1 hour"), (req, res) => {
 	console.log("^ Route Now Cached For 1 Hour.");
-	
+
 	var agencies = req.query.agencies;
 	if(agencies){
 		console.log("Agency = ", agencies);
@@ -83,7 +83,7 @@ router.get('/agencies', cache("1 hour"), (req, res) => {
 	}
 });
 
-/*	
+/*
 	ABOUT: Contains a list of arrival estimates, separated by stops
 	PARAMS:
 		REQUIRED: (AT LEAST ONE)
@@ -91,7 +91,7 @@ router.get('/agencies', cache("1 hour"), (req, res) => {
 			routes 		(STRING): A list of route IDs for which to retrieve the arrival estimates, separated by commas.
 			stops		(STRING): A list of stop IDs for which to retrieve the arrival estimates, separated by commas.
 		OPTIONAL: NONE
-			
+
 */
 router.get('/estimates', cache('1 minute'), (req, res) => {
 	console.log("^ Route Now Cached For 1 Minute.");
@@ -118,17 +118,17 @@ router.get('/estimates', cache('1 minute'), (req, res) => {
 
 });
 
-/*	
+/*
 	ABOUT: Contains a list of routes, along with properties of the routes (segments, names, types, is_active, etc...).
 	PARAMS:
-		REQUIRED: 
+		REQUIRED:
 			agencies	(STRING): A list of agency IDs which to retrieve routes for.
 		OPTIONAL: NONE
-			
+
 */
 router.get('/routes', cache("30 minutes"), (req, res) => {
 	console.log("^ Route Now Cached For 30 Minutes.");
-	
+
 	var agencies = req.query.agencies;
 	console.log(agencies);
 	if(agencies){
@@ -144,7 +144,7 @@ router.get('/routes', cache("30 minutes"), (req, res) => {
 
 });
 
-/*	
+/*
 	ABOUT: Contains a list of all the segments that are required to visualize a route.
 	PARAMS:
 		REQUIRED: NONE
@@ -154,7 +154,7 @@ router.get('/routes', cache("30 minutes"), (req, res) => {
 */
 router.get('/segments', cache("30 minutes"), (req, res) => {
 	console.log("^ Route Now Cached For 30 Minutes.");
-	
+
 	var agencies 	= req.query.agencies;
 	var routes 		= req.query.routes;
 
@@ -174,16 +174,16 @@ router.get('/segments', cache("30 minutes"), (req, res) => {
 	}
 });
 
-/*	
+/*
 	ABOUT: Contains a list of stops
 	PARAMS:
 		REQUIRED: NONE
 		OPTIONAL:
-			agencies	(STRING): A list of agency IDs which to retrieve stops for. Defaults to __ (University of Rochester) 
+			agencies	(STRING): A list of agency IDs which to retrieve stops for. Defaults to __ (University of Rochester)
 */
 router.get('/stops', cache("30 minutes"), (req, res) => {
 	console.log("^ Route Now Cached For 30 Minutes.");
-	
+
 	var agencies = req.query.agencies;
 
 	if(agencies){
@@ -199,15 +199,15 @@ router.get('/stops', cache("30 minutes"), (req, res) => {
 	}
 });
 
-/*	
+/*
 	ABOUT: Contains a list of vehicles, their properties, and their locations.
 	PARAMS:
 		REQUIRED: NONE
 		OPTIONAL:
-			agencies	(STRING): A list of agency IDs for which to retrieve the vehicles. Defaults to __ (University of Rochester) 
+			agencies	(STRING): A list of agency IDs for which to retrieve the vehicles. Defaults to __ (University of Rochester)
 			routes 		(STRING): A list of route IDs for which to retrieve the vehicles, seperated by commas.
 */
-router.get('/vehicles', (req, res) => {
+router.get('/vehicles', cache("1.5 seconds"), (req, res) => {
 	var agencies 	= req.query.agencies;
 	var routes 		= req.query.routes;
 
@@ -228,7 +228,7 @@ router.get('/vehicles', (req, res) => {
 });
 
 
-/*	
+/*
 	ABOUT: Makes a Geocode Request to the Google APIs
 	PARAMS:
 		REQUIRED: NONE
@@ -242,7 +242,7 @@ router.get('/geocode/:address', cache('5 minutes'), (req, res) => {
 	});
 });
 
-/*	
+/*
 	ABOUT: Makes a Places Request to the Google APIs
 	PARAMS:
 		REQUIRED: NONE
@@ -256,7 +256,7 @@ router.get('/places/:query', cache('5 minutes'), (req, res) => {
 	});
 });
 
-/*	
+/*
 	ABOUT: Makes a Places AutoComplete Request to the Google APIs
 	PARAMS:
 		REQUIRED: NONE
@@ -274,10 +274,10 @@ router.get('/placesAutoComplete/:query', (req, res) => {
 	res.status(200).json({"places" : []});
 });
 
-/*	
+/*
 	ABOUT: Finds directions between two locations using Google APIs
 	PARAMS:
-		REQUIRED: 
+		REQUIRED:
 			origin		(String - comma pair) The LatLng Pair of the origin
 			destination	(String - comma pair) The LatLng Pair of the destination
 		OPTIONAL:
@@ -294,10 +294,11 @@ router.get('/gDirections/:origin/:destination', cache('1 minute'), (req, res) =>
 });
 
 
+
 /* ============ END CLIENT-SIDE ENDPOINTS ============ */
 
 // 404 Page
-router.get('/*', (req, res) => {	
+router.get('/*', (req, res) => {
   	res.send("Whoops you 404'd!")
 });
 

@@ -14,7 +14,7 @@
 	<!-- Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-	<script src="js/home.js"></script>
+	<script src="js/do_not_delete.js"></script>
 
 
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
@@ -65,7 +65,7 @@
 
 	      }
 	    </script>
-	    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfWoPWJw8uWXprI_uL3D1TQ10Df-atWkY&callback=initMap"></script>
+	    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfWoPWJw8uWXprI_uL3D1TQ10Df-atWkY&libraries=geometry&callback=initMap"></script>
 
 	    <div class="content">
 
@@ -86,7 +86,7 @@
 			    		<div class="col-md-1" style="border-right: 1px solid grey; height: 1em; padding-left: 0; padding-right: 0; width: 1em;">
 			    		</div>
 			    		<div class="col-md-1">
-			    			<i class="fa fa-map-signs" aria-hidden="true" style="color: grey;"></i>
+			    			<i id="directions-button" class="fa fa-map-signs" aria-hidden="true" style="color: grey;"></i>
 			    		</div>
 					</div>
 					<hr style="margin-top: 0; margin-bottom: 0;">
@@ -98,41 +98,6 @@
 
 	    		</div>
 	    		<!-- End Search Box Container -->
-
-
-	    		<script type="text/javascript">
-
-	    			$(document).ready(function(){
-	    				/*
-	        			var vehicleUpdater = setInterval(function(){
-	        				//Show All "vehicles"
-							$.get( "/api/vehicles?agencies=283", function( data ) {
-									console.log("SUCCESS", data);
-									var vehicles = data.vehicles.data["283"];
-									if(vehicles.length > 0){
-
-										for(var x in vehicles){
-											var vehicle = vehicles[x];
-											var location = vehicle.location;
-
-											var marker = new google.maps.Marker({
-									          position: location,
-									          map: map
-									        });
-
-										}
-									}
-							});
-	        			}, 2000);
-						*/
-
-
-
-
-
-					});
-
-	    		</script>
 
 	    	</div>
 

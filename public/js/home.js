@@ -1,4 +1,3 @@
-
 var searchMarker;
 var markers = []; // Markers for the busses current locations
 var infowindows = [];
@@ -136,9 +135,11 @@ $(document).ready(function(){
 						var vehicle = vehicles[x];
 						var id = vehicle.vehicle_id;
 						var newLocation = vehicle.location;
+						// console.log(newLocation);
 						// Find marker with matching ID and update it's position
 						for(var x in markers) {
-							var marker = markers[x]
+							console.log(markers[x].id == id);
+							var marker = markers[x];
 							if(marker.id == id) {
 								marker.setPosition(newLocation);
 							}
@@ -172,48 +173,51 @@ function initVehicles() {
 					var location = vehicle.location;
 					console.log("location", location);
 
-					var marker = new google.maps.Marker({
-						 position: location,
-						 map: map, // Makes it appear on the map
-						 icon: getIcon(vehicle.route_id),
-						 id: vehicle.vehicle_id,
-						 title: routeTable[vehicle.route_id][1] // Long-Name is title
-					});
-
-					// Info Window for each bus icon
-					var contentString = '<div id="content">' +
-											'<div id="siteNotice">' +
-											'</div>' +
-											'<h5 id="firstHeading" class="firstHeading" style="color:#' + routeTable[vehicle.route_id][0] +
-											';">' + routeTable[vehicle.route_id][1] + '</h5>' +
-										'</div>';
-					var infowindow = new google.maps.InfoWindow({
-						content: contentString
-					});
-
-					// Show the label when icon is clicked on
-					// marker.addListener('click', function() {
-					// 	infowindow.open(map, marker);
-					// });
-
-
-					// Save marker for later updating (instead of recreating each time)
-					markers.push(marker); // Add to list of markers
-					infowindows.push(infowindow);
+					initMarker(vehicle);
 				}
-
-				for(var x in markers) {
-					markers[x].addListener('click', function() {
-						infowindows[x].open(map, markers[x]);
-					})
-				}
-
 			}
 	});
+
 }
+
+
+// Initializes single vehicle marker
+function initMarker(vehicle) {
+	var marker = new google.maps.Marker({
+		 position: vehicle.location,
+		 map: map, // Makes it appear on the map
+		 icon: getIcon(vehicle.route_id),
+		 id: vehicle.vehicle_id,
+		 title: routeTable[vehicle.route_id][1] // Long-Name is title
+	});
+
+	// Info Window for each bus icon
+	var contentString = '<div id="content">' +
+							'<div id="siteNotice">' +
+							'</div>' +
+							'<h5 id="firstHeading" class="firstHeading" style="color:#' + routeTable[vehicle.route_id][0] +
+							';">' + routeTable[vehicle.route_id][1] + '</h5>' +
+						'</div>';
+	var infowindow = new google.maps.InfoWindow({
+		content: contentString
+	});
+
+	// Show the label when icon is clicked on
+	marker.addListener('click', function() {
+		for(var z in infowindows) { // Hide others
+			infowindows[z].close();
+		}
+		infowindow.open(map, this);
+	});
+
+	markers.push(marker); // Add to list of markers
+	infowindows.push(infowindow);
+}
+
 
 // Returns the icon formatted properly with the correct color/size
 function getIcon(id) {
+	// SVG from http://www.flaticon.com/free-icon/bus-side-view_61985
 	var icon = {
 		path: "M77.695,208.593c-17.985,0-32.562,14.571-32.562,32.559c0,17.988,14.576,32.559,32.562,32.559 "+
 			"c17.992,0,32.564-14.57,32.564-32.559C110.259,223.163,95.687,208.593,77.695,208.593z M77.695,255.306 "+
@@ -232,7 +236,7 @@ function getIcon(id) {
 			"c8.027,0,14.594,6.567,14.594,14.593V144.244z",
 		fillColor: "#" + routeTable[id][0],
 		fillOpacity: .95,
-		anchor: new google.maps.Point(0,100),
+		anchor: new google.maps.Point(30,30),
       strokeWeight: 0,
       scale: .10
 	};
