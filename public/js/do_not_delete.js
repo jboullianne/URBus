@@ -2,6 +2,7 @@
 var vehicleList = [];
 var segmentList = [];
 var polylineList = {};
+var rawRouteData = {};
 
 var searchMarker;
 
@@ -129,7 +130,7 @@ $(document).ready(function(){
     console.log("GET DIRECTIONS CLICK");
   });
 
-
+  
 	var vehicleUpdater = setInterval(function(){
 		// Update location of all vehicles (busses)
 		$.get( "/api/vehicles?agencies=283", function( data ) {
@@ -214,13 +215,13 @@ function buildRoutePaths() {
       $.get( "/api/routes?agencies=283", function( data ) {
 
         var routes = data.routes.data["283"];
+        
 
         for(var x in segmentList){
           var seg = segmentList[x];
 
           for(var y in routes){
             var route = routes[y];
-            console.log(route);
             var color = route.color
 
             for(var z in route.segments){
@@ -236,23 +237,23 @@ function buildRoutePaths() {
 
                 polylineList[seg.id] = line;
                 polylineList[seg.id].setMap(map);
-
+                
               }else{
                 //Nothing
               }
             }
 
+            
 
 
 
-
-          }
+          } 
         }
       });
 
+      
 
-
-
+      
   });
 
 }

@@ -1,11 +1,26 @@
 var searchMarker;
 var markers = []; // Markers for the busses current locations
 var infowindows = [];
+var vehicleList = [];
+var segmentList = [];
+var polylineList = {};
+var rawRouteData = {};
+var routeTable = {};
 
 
 $(document).ready(function(){
 
 	console.log("Home.js Ready");
+
+	$.get("/api/routes?agencies=283", function(data) {
+		var allRoutes = data.routes.data["283"];
+		for(var x in allRoutes) {
+			var route = allRoutes[x];
+			// console.log(route);
+			routeTable[route.route_id] = {color: route.color, name: route.long_name};
+		}
+	})
+
 
 	$("#search-box").keydown(function(e){
 		if(e.key == "Enter"){ //Search For Input
@@ -53,7 +68,7 @@ $(document).ready(function(){
 			})
 		}else{
 			$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
-				console.log("SUCCESS", data);
+				// console.log("SUCCESS", data);
 				var places = data.places;
 				if(places.length > 0){
 					$("#search-list").html("");
@@ -83,7 +98,7 @@ $(document).ready(function(){
 
 				for(var x in places){
 					var place = places[x];
-					console.log(place);
+					// console.log(place);
 					var name = place.name;
 					var form_addr = place.formatted_address;
 					var location = place.geometry.location;
@@ -128,7 +143,7 @@ $(document).ready(function(){
 	var vehicleUpdater = setInterval(function(){
 		// Update location of all vehicles (busses)
 		$.get( "/api/vehicles?agencies=283", function( data ) {
-				console.log("SUCCESS", data);
+				// console.log("SUCCESS", data);
 				var vehicles = data.vehicles.data["283"];
 				if(vehicles.length > 0) {
 					for(var x in vehicles) {
@@ -137,11 +152,11 @@ $(document).ready(function(){
 						var newLocation = vehicle.location;
 						// console.log(newLocation);
 						// Find marker with matching ID and update it's position
-						for(var x in markers) {
-							console.log(markers[x].id == id);
-							var marker = markers[x];
+						for(var y in markers) {
+							var marker = markers[y];
 							if(marker.id == id) {
 								marker.setPosition(newLocation);
+								marker.setMap(map);
 							}
 						}
 					}
@@ -165,7 +180,7 @@ var searchPlace = function(input, callback){
 // Initializes all vehile markers on the map
 function initVehicles() {
 	$.get( "/api/vehicles?agencies=283", function( data ) {
-			console.log("SUCCESS", data);
+			// console.log("SUCCESS", data);
 			var vehicles = data.vehicles.data["283"];
 			if(vehicles.length > 0){
 				for(var x in vehicles){
@@ -176,7 +191,27 @@ function initVehicles() {
 					initMarker(vehicle);
 				}
 			}
-	});
+
+	for(var x in vehicles){
+	  var vdata = vehicles[x];
+	  var vehicle = {};
+
+	  vehicle.id = vdata.vehicle_id;
+	  vehicle.route = vdata.route_id;
+	  vehicle.location = vdata.location;
+	  vehicle.name = vdata.call_name;
+	  vehicle.marker = new google.maps.Marker({
+			position: vehicle.location,
+			// map: map,
+			title: vehicle.name,
+			icon: getIcon(vehicle.route)
+		 });
+
+	  vehicleList.push(vehicle);
+
+	}
+});
+	buildRoutePaths();
 
 }
 
@@ -188,15 +223,15 @@ function initMarker(vehicle) {
 		 map: map, // Makes it appear on the map
 		 icon: getIcon(vehicle.route_id),
 		 id: vehicle.vehicle_id,
-		 title: routeTable[vehicle.route_id][1] // Long-Name is title
+		 title: routeTable[vehicle.route_id].name // Long-Name is title
 	});
 
 	// Info Window for each bus icon
 	var contentString = '<div id="content">' +
 							'<div id="siteNotice">' +
 							'</div>' +
-							'<h5 id="firstHeading" class="firstHeading" style="color:#' + routeTable[vehicle.route_id][0] +
-							';">' + routeTable[vehicle.route_id][1] + '</h5>' +
+							'<h5 id="firstHeading" class="firstHeading" style="color:#' + routeTable[vehicle.route_id].color +
+							';">' + routeTable[vehicle.route_id].name + '</h5>' +
 						'</div>';
 	var infowindow = new google.maps.InfoWindow({
 		content: contentString
@@ -214,9 +249,66 @@ function initMarker(vehicle) {
 	infowindows.push(infowindow);
 }
 
+// Builds the PolyLines representing the bus routes
+function buildRoutePaths() {
+
+  $.get( "/api/segments?agencies=283", function( data ) {
+
+      var segments = data.segments.data;
+
+      for(var x in segments){
+        var sdata = segments[x];
+        var seg = {};
+
+        seg.id = x
+        seg.points = google.maps.geometry.encoding.decodePath(sdata);
+
+        segmentList.push(seg);
+
+      }
+
+      $.get( "/api/routes?agencies=283", function( data ) {
+
+        var routes = data.routes.data["283"];
+
+
+        for(var x in segmentList){
+          var seg = segmentList[x];
+
+          for(var y in routes){
+            var route = routes[y];
+            var color = route.color
+
+            for(var z in route.segments){
+              var s = route.segments[z][0];
+
+              if(s == seg.id){
+                var line = new google.maps.Polyline({
+                    path: seg.points,
+                    strokeColor: "#" + color,
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2.0
+                });
+
+                polylineList[seg.id] = line;
+                polylineList[seg.id].setMap(map);
+
+              }else{
+                //Nothing
+              }
+            }
+          }
+        }
+      });
+  });
+
+}
 
 // Returns the icon formatted properly with the correct color/size
 function getIcon(id) {
+	if(routeTable[id] == undefined) {
+		console.log(id);
+	}
 	// SVG from http://www.flaticon.com/free-icon/bus-side-view_61985
 	var icon = {
 		path: "M77.695,208.593c-17.985,0-32.562,14.571-32.562,32.559c0,17.988,14.576,32.559,32.562,32.559 "+
@@ -234,32 +326,11 @@ function getIcon(id) {
 			"c1.465-7.891,9.23-14.348,17.256-14.348h38.543L80.856,158.836L80.856,158.836z M167.439,158.836H92.53V88.401h74.909V158.836z "+
 			" M254.021,158.836h-74.908V88.401h74.908V158.836z M338.523,144.244c0,8.026-6.566,14.593-14.594,14.593h-58.234V88.402h58.234 "+
 			"c8.027,0,14.594,6.567,14.594,14.593V144.244z",
-		fillColor: "#" + routeTable[id][0],
+		fillColor: "#" + routeTable[id].color,
 		fillOpacity: .95,
-		anchor: new google.maps.Point(30,30),
+		anchor: new google.maps.Point(150,90),
       strokeWeight: 0,
       scale: .10
 	};
 	return icon;
 }
-
-// Assosciates the route_id with the color and name of the line
-var routeTable = {"4004546" : ["fffc66","Scottsville Rd Lot"],
-						"4004558" : ["694489","Corporate Woods"],
-						"4004562" : ["2de3e0","MC Staff"],
-						"4005038" : ["0c010f","Goler-Whipple Shuttle"],
-						"4006218" : ["1ba0a0","College Town Express"],
-						"4006658" : ["ffabf9","Admissions"],
-						"4007436" : ["808080","City of Rochester Tour"],
-						"4007476" : ["f00c93","Highland Hospital"],
-						"4008380" : ["ff0000","Red Line"],
-						"4008382" : ["0f29f2","Blue Line"],
-						"4008384" : ["f07205","Orange Line"],
-						"4008386" : ["706868","Silver Line"],
-						"4008388" : ["a1a10b","Gold Line - Riverview Direct"],
-						"4008390" : ["a1a10b","Gold Line - 19th Ward"],
-						"4008392" : ["07910c","Green Line - Pittsford Plaza"],
-						"4008394" : ["07910c","Green Line - College Town & Tops"],
-						"4008396" : ["07910c","Green Line - Marketplace"],
-						"4008398" : ["07910c","Green Line - Public Market"],
-						"4009446" : ["b600ff","Orange/Blue Line"]};
