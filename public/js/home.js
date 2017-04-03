@@ -1,4 +1,5 @@
 var searchMarker;
+var searchMarkerB;
 var markers = []; // Markers for the busses current locations
 var infowindows = [];
 var vehicleList = [];
@@ -11,6 +12,8 @@ var routeTable = {};
 $(document).ready(function(){
 
 	console.log("Home.js Ready");
+	initVehicles();	// Initializes all vehile markers on the map
+
 
 	$.get("/api/routes?agencies=283", function(data) {
 		var allRoutes = data.routes.data["283"];
@@ -95,7 +98,6 @@ $(document).ready(function(){
 		searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
 				$("#search-suggestions").hide();
 				var places = data.places;
-
 				for(var x in places){
 					var place = places[x];
 					// console.log(place);
@@ -137,8 +139,135 @@ $(document).ready(function(){
 		})
 	});
 
+	$("#expand-search").click(function() {
+		var searchB = $("#search-container-B");
+		if(searchB.hasClass("hidden")) {
+			searchB.removeClass("hidden");
+		}
+		else {
+			searchB.addClass("hidden");
+		}
+	});
 
-	initVehicles();	// Initializes all vehile markers on the map
+
+		$("#search-boxB").keydown(function(e){
+			if(e.key == "Enter"){ //Search For Input
+				searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
+					$("#search-suggestionsB").hide();
+					var places = data.places;
+					for(var x in places){
+						var place = places[x];
+						console.log(place);
+						var name = place.name;
+						var form_addr = place.formatted_address;
+						var location = place.geometry.location;
+
+						map.setCenter(location);
+
+						//Info Window HTML
+						var contentString = '<div id="contentB">' +
+												'<div id="siteNoticeB">' +
+												'</div>' +
+												'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
+												'<small>' + form_addr + '</small>'+
+											'</div>';
+
+						var infowindowB = new google.maps.InfoWindow({
+							content: contentString
+						});
+
+						if(searchMarkerB){ searchMarkerB.setMap(null); }
+						//Marker For Map
+						searchMarkerB = new google.maps.Marker({
+							position: location,
+							map: map,
+							title: name,
+							animation: google.maps.Animation.DROP
+						});
+
+						//Open info Window and Add Listener
+						// infowindowB.open(map, searchMarker);
+						searchMarkerB.addListener('click', function() {
+							infowindowB.open(map, searchMarker);
+						});
+
+						console.log(searchMarker.position, searchMarkerB.position);
+						// API call for directions
+
+					}
+				})
+			}else{
+				$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-boxB").val() + " "), function( data ) {
+					// console.log("SUCCESS", data);
+					var places = data.places;
+					if(places.length > 0){
+						$("#search-listB").html("");
+						$("#search-suggestionsB").show();
+
+						for(var x in places){
+							var place = places[x];
+							var description = place.description;
+							var item = "<li style=\"border-bottom: 1px solid grey;\">" + description + "</li>";
+
+							if(description){
+								$("#search-listB").append(item);
+							}
+						}
+					}else{
+						$("#search-suggestionsB").hide();
+					}
+				});
+			}
+
+		});
+
+		$("#search-bar-buttonB").click(function(){
+			searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
+					$("#search-suggestionsB").hide();
+					var places = data.places;
+					for(var x in places){
+						var place = places[x];
+						// console.log(place);
+						var name = place.name;
+						var form_addr = place.formatted_address;
+						var location = place.geometry.location;
+
+						map.setCenter(location);
+
+						//Info Window HTML
+						var contentString = '<div id="contentB">' +
+												'<div id="siteNoticeB">' +
+												'</div>' +
+												'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
+												'<small>' + form_addr + '</small>'+
+											'</div>';
+
+						var infowindowB = new google.maps.InfoWindow({
+							content: contentString
+						});
+
+						if(searchMarkerB){ searchMarkerB.setMap(null); }
+						//Marker For Map
+						searchMarkerB = new google.maps.Marker({
+							position: location,
+							map: map,
+							title: name,
+							animation: google.maps.Animation.DROP,
+						});
+
+						//Open info Window and Add Listener
+						// infowindowB.open(map, searchMarker);
+						searchMarkerB.addListener('click', function() {
+							infowindowB.open(map, searchMarker);
+						});
+
+						console.log(searchMarker.position, searchMarkerB.position);
+						// API call for directions
+
+					}
+			})
+		});
+
 
 	var vehicleUpdater = setInterval(function(){
 		// Update location of all vehicles (busses)
@@ -155,8 +284,14 @@ $(document).ready(function(){
 						for(var y in markers) {
 							var marker = markers[y];
 							if(marker.id == id) {
-								marker.setPosition(newLocation);
-								marker.setMap(map);
+
+								var diff = newLocation.lat - marker.position.lat() + (newLocation.lng - marker.position.lng());
+								diff *= 1000;
+								// console.log(diff);
+								if(diff > -5 && diff < 5 && diff != 0) {
+									marker.setPosition(newLocation);
+									marker.setMap(map);
+								}
 							}
 						}
 					}
@@ -328,7 +463,7 @@ function getIcon(id) {
 			"c8.027,0,14.594,6.567,14.594,14.593V144.244z",
 		fillColor: "#" + routeTable[id].color,
 		fillOpacity: .95,
-		anchor: new google.maps.Point(150,90),
+		anchor: new google.maps.Point(150,-20),
       strokeWeight: 0,
       scale: .10
 	};

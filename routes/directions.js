@@ -18,7 +18,9 @@ module.exports = {
 
 	findPlaces: function(query, callback){
 		googleMapsClient.places({
-			"query": query
+			"query": query,
+         location: {lat: 43.128397, lng: -77.628681},
+         radius: 2000
 		}, function(err, response) {
 			if(!err) {
 				callback(response.json.results);
