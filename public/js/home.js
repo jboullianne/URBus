@@ -12,8 +12,6 @@ var routeTable = {};
 $(document).ready(function(){
 
 	console.log("Home.js Ready");
-	initVehicles();	// Initializes all vehile markers on the map
-
 
 	$.get("/api/routes?agencies=283", function(data) {
 		var allRoutes = data.routes.data["283"];
@@ -22,53 +20,14 @@ $(document).ready(function(){
 			// console.log(route);
 			routeTable[route.route_id] = {color: route.color, name: route.long_name};
 		}
+		initVehicles();	// Initializes all vehile markers on the map
 	})
 
 
 	$("#search-box").keydown(function(e){
 		if(e.key == "Enter"){ //Search For Input
-			searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
-				$("#search-suggestions").hide();
-				var places = data.places;
-				for(var x in places){
-					var place = places[x];
-					console.log(place);
-					var name = place.name;
-					var form_addr = place.formatted_address;
-					var location = place.geometry.location;
+			searchAclicked();
 
-					map.setCenter(location);
-
-					//Info Window HTML
-					var contentString = '<div id="content">' +
-											'<div id="siteNotice">' +
-											'</div>' +
-											'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
-											'<small>' + form_addr + '</small>'+
-										'</div>';
-
-					var infowindow = new google.maps.InfoWindow({
-						content: contentString
-					});
-
-					if(searchMarker){ searchMarker.setMap(null); }
-					//Marker For Map
-					searchMarker = new google.maps.Marker({
-						position: location,
-						map: map,
-						title: name,
-						animation: google.maps.Animation.DROP,
-					});
-
-					//Open info Window and Add Listener
-					infowindow.open(map, searchMarker);
-					searchMarker.addListener('click', function() {
-						infowindow.open(map, searchMarker);
-					});
-
-
-				}
-			})
 		}else{
 			$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-box").val() + " "), function( data ) {
 				// console.log("SUCCESS", data);
@@ -91,53 +50,9 @@ $(document).ready(function(){
 				}
 			});
 		}
-
 	});
 
-	$("#search-bar-button").click(function(){
-		searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
-				$("#search-suggestions").hide();
-				var places = data.places;
-				for(var x in places){
-					var place = places[x];
-					// console.log(place);
-					var name = place.name;
-					var form_addr = place.formatted_address;
-					var location = place.geometry.location;
-
-					map.setCenter(location);
-
-					//Info Window HTML
-					var contentString = '<div id="content">' +
-											'<div id="siteNotice">' +
-											'</div>' +
-											'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
-											'<small>' + form_addr + '</small>'+
-										'</div>';
-
-					var infowindow = new google.maps.InfoWindow({
-						content: contentString
-					});
-
-					if(searchMarker){ searchMarker.setMap(null); }
-					//Marker For Map
-					searchMarker = new google.maps.Marker({
-						position: location,
-						map: map,
-						title: name,
-						animation: google.maps.Animation.DROP,
-					});
-
-					//Open info Window and Add Listener
-					infowindow.open(map, searchMarker);
-					searchMarker.addListener('click', function() {
-						infowindow.open(map, searchMarker);
-					});
-
-
-				}
-		})
-	});
+	$("#search-bar-button").click(searchAclicked);
 
 	$("#expand-search").click(function() {
 		var searchB = $("#search-container-B");
@@ -149,53 +64,9 @@ $(document).ready(function(){
 		}
 	});
 
-
-		$("#search-boxB").keydown(function(e){
+	$("#search-boxB").keydown(function(e){
 			if(e.key == "Enter"){ //Search For Input
-				searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
-					$("#search-suggestionsB").hide();
-					var places = data.places;
-					for(var x in places){
-						var place = places[x];
-						console.log(place);
-						var name = place.name;
-						var form_addr = place.formatted_address;
-						var location = place.geometry.location;
-
-						map.setCenter(location);
-
-						//Info Window HTML
-						var contentString = '<div id="contentB">' +
-												'<div id="siteNoticeB">' +
-												'</div>' +
-												'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
-												'<small>' + form_addr + '</small>'+
-											'</div>';
-
-						var infowindowB = new google.maps.InfoWindow({
-							content: contentString
-						});
-
-						if(searchMarkerB){ searchMarkerB.setMap(null); }
-						//Marker For Map
-						searchMarkerB = new google.maps.Marker({
-							position: location,
-							map: map,
-							title: name,
-							animation: google.maps.Animation.DROP
-						});
-
-						//Open info Window and Add Listener
-						// infowindowB.open(map, searchMarker);
-						searchMarkerB.addListener('click', function() {
-							infowindowB.open(map, searchMarker);
-						});
-
-						console.log(searchMarker.position, searchMarkerB.position);
-						// API call for directions
-
-					}
-				})
+				searchBclicked();
 			}else{
 				$.get( "/api/placesAutoComplete/" + encodeURIComponent($("#search-boxB").val() + " "), function( data ) {
 					// console.log("SUCCESS", data);
@@ -221,53 +92,7 @@ $(document).ready(function(){
 
 		});
 
-		$("#search-bar-buttonB").click(function(){
-			searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
-					$("#search-suggestionsB").hide();
-					var places = data.places;
-					for(var x in places){
-						var place = places[x];
-						// console.log(place);
-						var name = place.name;
-						var form_addr = place.formatted_address;
-						var location = place.geometry.location;
-
-						map.setCenter(location);
-
-						//Info Window HTML
-						var contentString = '<div id="contentB">' +
-												'<div id="siteNoticeB">' +
-												'</div>' +
-												'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
-												'<small>' + form_addr + '</small>'+
-											'</div>';
-
-						var infowindowB = new google.maps.InfoWindow({
-							content: contentString
-						});
-
-						if(searchMarkerB){ searchMarkerB.setMap(null); }
-						//Marker For Map
-						searchMarkerB = new google.maps.Marker({
-							position: location,
-							map: map,
-							title: name,
-							animation: google.maps.Animation.DROP,
-						});
-
-						//Open info Window and Add Listener
-						// infowindowB.open(map, searchMarker);
-						searchMarkerB.addListener('click', function() {
-							infowindowB.open(map, searchMarker);
-						});
-
-						console.log(searchMarker.position, searchMarkerB.position);
-						// API call for directions
-
-					}
-			})
-		});
-
+	$("#search-bar-buttonB").click(searchBclicked);
 
 	var vehicleUpdater = setInterval(function(){
 		// Update location of all vehicles (busses)
@@ -301,6 +126,98 @@ $(document).ready(function(){
 
 });
 
+function searchAclicked() {
+	searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
+			$("#search-suggestions").hide();
+			var places = data.places;
+			for(var x in places){
+				var place = places[x];
+				// console.log(place);
+				var name = place.name;
+				var form_addr = place.formatted_address;
+				var location = place.geometry.location;
+
+				map.setCenter(location);
+
+				//Info Window HTML
+				var contentString = '<div id="content">' +
+										'<div id="siteNotice">' +
+										'</div>' +
+										'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
+										'<small>' + form_addr + '</small>'+
+									'</div>';
+
+				var infowindow = new google.maps.InfoWindow({
+					content: contentString
+				});
+
+				if(searchMarker){ searchMarker.setMap(null); }
+				//Marker For Map
+				searchMarker = new google.maps.Marker({
+					position: location,
+					map: map,
+					title: name,
+					animation: google.maps.Animation.DROP,
+				});
+
+				//Open info Window and Add Listener
+				infowindow.open(map, searchMarker);
+				searchMarker.addListener('click', function() {
+					infowindow.open(map, searchMarker);
+				});
+
+
+			}
+	})
+}
+
+function searchBclicked() {
+	searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
+			$("#search-suggestionsB").hide();
+			var places = data.places;
+			for(var x in places){
+				var place = places[x];
+				// console.log(place);
+				var name = place.name;
+				var form_addr = place.formatted_address;
+				var location = place.geometry.location;
+
+				map.setCenter(location);
+
+				//Info Window HTML
+				var contentString = '<div id="contentB">' +
+										'<div id="siteNoticeB">' +
+										'</div>' +
+										'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
+										'<small>' + form_addr + '</small>'+
+									'</div>';
+
+				var infowindowB = new google.maps.InfoWindow({
+					content: contentString
+				});
+
+				if(searchMarkerB){ searchMarkerB.setMap(null); }
+				//Marker For Map
+				searchMarkerB = new google.maps.Marker({
+					position: location,
+					map: map,
+					title: name,
+					animation: google.maps.Animation.DROP,
+				});
+
+				//Open info Window and Add Listener
+				// infowindowB.open(map, searchMarker);
+				searchMarkerB.addListener('click', function() {
+					infowindowB.open(map, searchMarker);
+				});
+
+				console.log(searchMarker.position, searchMarkerB.position);
+				getDirections(searchMarker.position, searchMarkerB.position);
+				// API call for directions
+
+			}
+	})
+}
 
 var searchPlace = function(input, callback){
 	$.get( "/api/places/" + input, function( data ) {
@@ -365,7 +282,8 @@ function initMarker(vehicle) {
 	var contentString = '<div id="content">' +
 							'<div id="siteNotice">' +
 							'</div>' +
-							'<h5 id="firstHeading" class="firstHeading" style="color:#' + routeTable[vehicle.route_id].color +
+							'<h5 id="firstHeading" class="firstHeading" ' +
+							// '<h5 id="firstHeading" class="firstHeading" style="color:#' + routeTable[vehicle.route_id].color +
 							';">' + routeTable[vehicle.route_id].name + '</h5>' +
 						'</div>';
 	var infowindow = new google.maps.InfoWindow({
@@ -462,10 +380,44 @@ function getIcon(id) {
 			" M254.021,158.836h-74.908V88.401h74.908V158.836z M338.523,144.244c0,8.026-6.566,14.593-14.594,14.593h-58.234V88.402h58.234 "+
 			"c8.027,0,14.594,6.567,14.594,14.593V144.244z",
 		fillColor: "#" + routeTable[id].color,
-		fillOpacity: .95,
-		anchor: new google.maps.Point(150,-20),
+		fillOpacity: .99,
+		anchor: new google.maps.Point(150,125),
       strokeWeight: 0,
       scale: .10
 	};
 	return icon;
+}
+
+// Gets the directions from any start point to any end point (not just stops)
+function getDirections(start, end) {
+	// Convert start and end to Stop_IDs if neccessary (always for now)
+
+	// Just use Lat/Lng pairs always, for now (until Stops shortcut front-end is implemented)
+	var points = start.lat() + ":" + start.lng() + "," + end.lat() + ":" + end.lng();
+	console.log("Points = " + points);
+	// Get request to getClosestStop to get Stop_IDs closest to start and and
+	// And ALSO the Google Directions from Start to Stop(Start) and for End too.
+
+	var allDirections = {}; // Will be directly made into HTML
+	// Add directions from start to Stop(start) (from getClosestStops endpoint)
+
+
+	// getDirectionsInternal(Stop(start)), Stop(end))
+
+
+	// Add directions from start to Stop(end) (from getClosestStops endpoint)
+
+
+}
+
+// Uses Dijkstra's algorithm to get directions from stop A to stop B
+function getDirectionsInteral(stopA, stopB) {
+	// Call busGraph endpoint to get G
+
+	// Dijkstra's algorithm to produce shortest path, weight = 100 if transfer lines, else 1
+
+	// Return path = {route_id: {start, stop}}
+	// Object with all the different routes you have to take to get from A to B
+	// And the stop you must get on the line and get off the line
+
 }

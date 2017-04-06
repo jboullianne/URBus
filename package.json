@@ -23,6 +23,7 @@
     "apicache": "^0.8.4",
     "express": "^4.14.1",
     "forever": "^0.15.3",
+    "graph-data-structure": "^0.8.0",
     "pg": "^6.1.5",
     "twilio": "^2.11.1",
     "unirest": "^0.5.1"

@@ -3,6 +3,7 @@ var vehicleList = [];
 var segmentList = [];
 var polylineList = {};
 var rawRouteData = {};
+var stopMap = {};
 
 var searchMarker;
 
@@ -124,10 +125,34 @@ $(document).ready(function(){
 
 				}
 		})
+
+
 	});
 
   $("#directions-button").click(function(){
     console.log("GET DIRECTIONS CLICK");
+  });
+
+  $.get( "/api/stops?agencies=283", function( data ) {
+    console.log("STOPS:",data.stops.data);
+    var stops = data.stops.data;
+
+    for(var x in stops){
+      var stop = stops[x];
+      stopMap[stop.stop_id] = stop;
+      stopMap[stop.stop_id].marker = new google.maps.Marker({
+        position: stop.location,
+        map: map,
+        title: stop.stop_id + " : " + stop.routes,
+      });
+
+      stopMap[stop.stop_id].marker.addListener('click', function() {
+        console.log("STOP", $(this)['0'].title);
+      });
+
+
+    }
+
   });
 
   
@@ -243,7 +268,7 @@ function buildRoutePaths() {
               }
             }
 
-            
+            console.log(route.stops);
 
 
 

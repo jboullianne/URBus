@@ -1,4 +1,5 @@
 
+
 //Google Maps Client Library
 var googleMapsClient = require('@google/maps').createClient({
   key: 'AIzaSyASr9Xd3y1N73kuR6ks8AKpnKuLQ6sHx4I'
@@ -37,18 +38,29 @@ module.exports = {
 				callback(response.json.predictions);
 			}
 		});
+	},
+	directionsGoogle: function(origin, destination, callback){
+		googleMapsClient.directions({
+			origin: origin,
+			destination: destination
+		}, function(err, response) {
+			console.log(err);
+			if(!err) {
+				callback(response.json);
+			}
+		});
+	},
+
+	distanceMatrix: function(origin, destination, callback){
+		googleMapsClient.distanceMatrix({
+			origins: origin,
+			destinations: destination
+		}, function(err, response) {
+			console.log(err);
+			if(!err) {
+				callback(response.json);
+			}
+		});
 	}
-   //,
-	// directionsGoogle: function(origin, destination, callback){
-	// 	googleMapsClient.directions({
-	// 		origin: origin,
-	// 		destination: destination
-	// 	}, function(err, response) {
-	// 		console.log(err);
-	// 		if(!err) {
-	// 			callback(response.json);
-	// 		}
-	// 	});
-	// }
 
 }

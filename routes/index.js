@@ -18,7 +18,9 @@ var authToken = '2e6bb9d88d4897342352cf9607c9dd7a';
 //require the Twilio module and create a REST client
 var client = require('twilio')(accountSid, authToken);
 
-
+var Graph = {};
+var stop_list = [];
+var stop_map = {};
 
 
 // router middleware that will happen on every request
@@ -278,19 +280,84 @@ router.get('/placesAutoComplete/:query', (req, res) => {
 	ABOUT: Finds directions between two locations using Google APIs
 	PARAMS:
 		REQUIRED:
-			origin		(String - comma pair) The LatLng Pair of the origin
-			destination	(String - comma pair) The LatLng Pair of the destination
-		OPTIONAL:
+			origin_coord	(String - comma pair) The LatLng Pair of the origin
+			dest_coord		(String - comma pair) The LatLng Pair of the destination
+
+			or
+
+			origin_name		(String) Name of Origin
+			dest_name		(String) Name of Destination
+		OPTIONAL: (Not Implemented Yet)
 			departure_time	(Date | Number)
 			arrival_time	(Date | Number)
 */
-router.get('/gDirections/:origin/:destination', cache('1 minute'), (req, res) => {
-	var origin = req.params.origin;
-	var destination = req.params.destination;
+router.get('/gDirections', cache('1 minute'), (req, res) => {
+	var origin 		= [req.query.origin_coord];
+	var destination = [req.query.dest_coord];
 
-	directions.directionsGoogle(origin, destination, function(data){
-		res.status(200).json({"directions" : data});
+	var start 	= req.query.origin_name;
+	var end 	= req.query.dest_name;
+
+	if(origin[0] && destination[0]){
+		directions.directionsGoogle(origin, destination, function(data){
+			res.status(200).json({"directions" : data});
+		});
+	}else{
+		console.log(start,end);
+		//Find The LAT/LNG Pairs to search distance
+		res.status(200).json({"Data" : "Endpoint Not Implemented Yet..."});
+	}
+
+	
+});
+
+/*
+	ABOUT: Finds distance between two locations using Google's Distance Matrix API
+	PARAMS:
+		REQUIRED:
+			origin_coord	(String - comma pair) The LatLng Pair of the origin
+			dest_coord		(String - comma pair) The LatLng Pair of the destination
+
+			or
+
+			origin_name		(String) Name of Origin
+			dest_name		(String) Name of Destination
+		OPTIONAL: (Not Implemented Yet)
+			departure_time	(Date | Number)
+			arrival_time	(Date | Number)
+*/
+router.get('/gDistance', cache('1 minute'), (req, res) => {
+	var origin 		= [req.query.origin_coord];
+	var destination = [req.query.dest_coord];
+
+	var start 	= req.query.origin_name;
+	var end 	= req.query.dest_name;
+
+	if(origin[0] && destination[0]){
+		directions.distanceMatrix(origin, destination, function(data){
+			res.status(200).json({"distance" : data});
+		});
+	}else{
+		console.log(start,end);
+		//Find The LAT/LNG Pairs to search distance
+		res.status(200).json({"Data" : "Endpoint Not Implemented Yet..."});
+	}
+
+});
+
+router.get('/closestStop', cache('1 minute'), (req, res) => {
+	var latlng_pairs = req.query.points.split(',').map(function(input){
+		return input.replace(':', ',');
 	});
+
+	console.log(latlng_pairs);
+	directions.distanceMatrix(latlng_pairs[0], Object.keys(stop_map)[0], function(data){
+		res.status(200).json({"distance" : data});
+	});
+});
+
+router.get('/busgraph', cache('1 minute'), (req, res) => {
+	res.status(200).json(Graph);
 });
 
 
@@ -303,3 +370,96 @@ router.get('/*', (req, res) => {
 });
 
 module.exports = router;
+
+
+
+
+/* CONSTRUCT BUS GRAPH HERE / FUNCTIONS */
+//var GraphMaker = require('graph-data-structure');
+
+//var Graph = GraphMaker();
+
+
+setupBusGraph();
+
+function setupBusGraph(){
+	console.log("Graph:", Graph);
+	
+	var agency = 283 //University of Rochester
+
+	unirest.get("https://transloc-api-1-2.p.mashape.com/routes.json?callback=call&agencies=" + agency)
+		.header("X-Mashape-Key", "1oUioRIEA1msh9uNwrByVr1TZMLpp1tD3F1jsnrJ4b0UUdx8ae")
+		.header("Accept", "application/json")
+		.end(function (result) {
+			var routes = result.body.data['283'];
+			//console.log("Routes: ", routes);
+
+			for(var x in routes){
+				var route = routes[x];
+
+				var route_id 	= route.route_id;
+				var stops 		= route.stops;
+
+				for(var y=0; y<stops.length -1; y++){
+					var stop = stops[y];
+					var next = stops[y+1];
+
+					if(Graph[stop]){
+						console.log("Stop visited");
+						Graph[stop][route_id] = next;
+					}else{
+						console.log("Not visited");
+						Graph[stop] = {};
+						Graph[stop][route_id] = next;
+					}
+					
+					console.log("STOP: ", stop);
+				}
+
+				if(stops.length != 0){
+					var stop = stops[stops.length-1];
+					var next = stops[0];
+
+					if(Graph[stop]){
+						console.log("Stop visited");
+						Graph[stop][route_id] = next;
+					}else{
+						console.log("Not visited");
+						Graph[stop] = {};
+						Graph[stop][route_id] = next;
+					}
+				}
+				
+
+				
+			}
+
+			console.log(Graph);
+		});
+}
+
+
+/* END BUS GRAPH FUNCTIONS */
+
+populateStops();
+
+function populateStops(){
+	var url = "https://transloc-api-1-2.p.mashape.com/stops.json?callback=call&agencies=283";
+		unirest.get(url)
+		.header("X-Mashape-Key", "1oUioRIEA1msh9uNwrByVr1TZMLpp1tD3F1jsnrJ4b0UUdx8ae")
+		.header("Accept", "application/json")
+		.end(function (result) {
+			for(var x in result.body.data){// For each Stop
+				var stop = result.body.data[x];
+
+				var lat = stop.location.lat;
+				var lng = stop.location.lng;
+
+				stop_map[lat + "," + lng] = stop.stop_id;
+
+			}
+			console.log("KEYS:", Object.keys(stop_map));
+	});
+}
+
+
