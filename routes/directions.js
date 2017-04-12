@@ -42,7 +42,8 @@ module.exports = {
 	directionsGoogle: function(origin, destination, callback){
 		googleMapsClient.directions({
 			origin: origin,
-			destination: destination
+			destination: destination,
+         mode: "walking"
 		}, function(err, response) {
 			console.log(err);
 			if(!err) {
@@ -62,5 +63,27 @@ module.exports = {
 			}
 		});
 	}
+   ,
+
+   closestStopMatrix: function(callback) {
+      googleMapsClient.distanceMatrix({
+         origins: [{
+          "lat": 43.121343,
+          "lng": -77.626055
+        }],
+         destinations: [{
+          "lat": 43.125419,
+          "lng": -77.628988
+       }, {
+          "lat": 43.159018,
+          "lng": -77.601301
+        }]
+         // transit_mode: "walking"
+      }, function(err, response) {
+         if(!err) {
+            callback(response.json);
+         }
+      });
+   }
 
 }

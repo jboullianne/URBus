@@ -308,7 +308,7 @@ router.get('/gDirections', cache('1 minute'), (req, res) => {
 		res.status(200).json({"Data" : "Endpoint Not Implemented Yet..."});
 	}
 
-	
+
 });
 
 /*
@@ -345,15 +345,82 @@ router.get('/gDistance', cache('1 minute'), (req, res) => {
 
 });
 
+function dist(lat1, lon1, lat2, lon2){
+	var R = 6371e3; // metres
+	var φ1 = lat1 * 3.14 / 180;
+	var φ2 = lat2 * 3.14 / 180;
+	var Δφ = (lat2-lat1) * 3.14 / 180;
+	var Δλ = (lon2-lon1) * 3.14 / 180;
+
+	var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+	        Math.cos(φ1) * Math.cos(φ2) *
+	        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+	var d = R * c;
+	return d;
+}
+
 router.get('/closestStop', cache('1 minute'), (req, res) => {
+
+	if(!req.query.points){
+		res.status(200).json({"data" : "No Point Query Provided"});
+		return;
+	}
 	var latlng_pairs = req.query.points.split(',').map(function(input){
 		return input.replace(':', ',');
 	});
 
-	console.log(latlng_pairs);
-	directions.distanceMatrix(latlng_pairs[0], Object.keys(stop_map)[0], function(data){
-		res.status(200).json({"distance" : data});
-	});
+	console.log("LAT/LNG", latlng_pairs);
+
+	var point_keys = Object.keys(stop_map);
+
+	var data = {};
+
+	for(var x = 0; x<latlng_pairs.length; x++){
+		var minDist = -1;
+		var closestPair = {};
+
+		var q = latlng_pairs[x].split(','); //Split LAt/LNG into parts
+
+		for(var i=1; i< point_keys.length; i++){
+			var p = point_keys[i].split(","); //Split active point into parts
+			if(dist(p[0],p[1],q[0],q[1]) < minDist || minDist == -1) {
+				minDist = dist(p,q);
+				closestPair = {start: q[0] + "," + q[1], stop: p[0] + "," + p[1]};
+			}
+		}
+		if(!data.stop_pairs){
+			data.stop_pairs = [];
+		}
+		data.stop_pairs.push(closestPair);
+	}
+
+	console.log(data.stop_pairs[0].start);
+	if(latlng_pairs.length == 1){
+		console.log("finding directions", data.stop_pairs[0]);
+		directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result){
+			var googleDirections = [result];
+			res.status(200).json({"data" : {"points" :data, "directions": googleDirections}});
+		});
+	}
+
+	if(latlng_pairs.length == 2){
+		console.log("finding directions", data.stop_pairs[0]);
+		directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result){
+			var googleDirections = [result];
+			// directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result2){
+			directions.directionsGoogle(data.stop_pairs[1].stop, data.stop_pairs[1].start, function(result2){
+				googleDirections.push(result2);
+				res.status(200).json({"data" : {"points" :data, "directions": googleDirections}});
+			});
+		});
+	}
+
+
+
+
+
 });
 
 router.get('/busgraph', cache('1 minute'), (req, res) => {
@@ -361,6 +428,13 @@ router.get('/busgraph', cache('1 minute'), (req, res) => {
 });
 
 
+
+router.get('/closestStopMatrix', cache('1 minute'), (req, res) => {
+	directions.closestStopMatrix(function(data) {
+		res.status(200).json({"data": data});
+	});
+
+});
 
 /* ============ END CLIENT-SIDE ENDPOINTS ============ */
 
@@ -384,7 +458,7 @@ setupBusGraph();
 
 function setupBusGraph(){
 	console.log("Graph:", Graph);
-	
+
 	var agency = 283 //University of Rochester
 
 	unirest.get("https://transloc-api-1-2.p.mashape.com/routes.json?callback=call&agencies=" + agency)
@@ -406,13 +480,13 @@ function setupBusGraph(){
 
 					if(Graph[stop]){
 						console.log("Stop visited");
-						Graph[stop][route_id] = next;
+						Graph[stop][next] = route_id;
 					}else{
 						console.log("Not visited");
 						Graph[stop] = {};
-						Graph[stop][route_id] = next;
+						Graph[stop][next] = route_id;
 					}
-					
+
 					console.log("STOP: ", stop);
 				}
 
@@ -422,16 +496,16 @@ function setupBusGraph(){
 
 					if(Graph[stop]){
 						console.log("Stop visited");
-						Graph[stop][route_id] = next;
+						Graph[stop][next] = route_id;
 					}else{
 						console.log("Not visited");
 						Graph[stop] = {};
-						Graph[stop][route_id] = next;
+						Graph[stop][next] = route_id;
 					}
 				}
-				
 
-				
+
+
 			}
 
 			console.log(Graph);
@@ -461,5 +535,3 @@ function populateStops(){
 			console.log("KEYS:", Object.keys(stop_map));
 	});
 }
-
-

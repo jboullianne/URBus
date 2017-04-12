@@ -7,6 +7,9 @@ var segmentList = [];
 var polylineList = {};
 var rawRouteData = {};
 var routeTable = {};
+var lastA = ""; // Last query for A (search both if both changed)
+var lastB = ""; // Last query for B (search both if both changed)
+var G = {};
 
 
 $(document).ready(function(){
@@ -54,14 +57,18 @@ $(document).ready(function(){
 
 	$("#search-bar-button").click(searchAclicked);
 
-	$("#expand-search").click(function() {
-		var searchB = $("#search-container-B");
-		if(searchB.hasClass("hidden")) {
-			searchB.removeClass("hidden");
-		}
-		else {
-			searchB.addClass("hidden");
-		}
+	$("#expand-search").click(toggleBoth);
+
+	$("#searchB").click(function() {
+		$("#search-bar-buttonB").fadeIn(300);
+		$("#search-A-bar").fadeOut(300);
+		$("#search-bar-button").fadeOut(300);
+	});
+	$("#searchA").click(function() {
+		$("#search-bar-button").fadeIn(300);
+		$("#search-A-bar").fadeIn(300);
+		$("#search-bar-buttonB").fadeOut(300);
+
 	});
 
 	$("#search-boxB").keydown(function(e){
@@ -124,110 +131,25 @@ $(document).ready(function(){
 		});
 	}, 1500);
 
-});
-
-function searchAclicked() {
-	searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
-			$("#search-suggestions").hide();
-			var places = data.places;
-			for(var x in places){
-				var place = places[x];
-				// console.log(place);
-				var name = place.name;
-				var form_addr = place.formatted_address;
-				var location = place.geometry.location;
-
-				map.setCenter(location);
-
-				//Info Window HTML
-				var contentString = '<div id="content">' +
-										'<div id="siteNotice">' +
-										'</div>' +
-										'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
-										'<small>' + form_addr + '</small>'+
-									'</div>';
-
-				var infowindow = new google.maps.InfoWindow({
-					content: contentString
-				});
-
-				if(searchMarker){ searchMarker.setMap(null); }
-				//Marker For Map
-				searchMarker = new google.maps.Marker({
-					position: location,
-					map: map,
-					title: name,
-					animation: google.maps.Animation.DROP,
-				});
-
-				//Open info Window and Add Listener
-				infowindow.open(map, searchMarker);
-				searchMarker.addListener('click', function() {
-					infowindow.open(map, searchMarker);
-				});
-
-
-			}
-	})
-}
-
-function searchBclicked() {
-	searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
-			$("#search-suggestionsB").hide();
-			var places = data.places;
-			for(var x in places){
-				var place = places[x];
-				// console.log(place);
-				var name = place.name;
-				var form_addr = place.formatted_address;
-				var location = place.geometry.location;
-
-				map.setCenter(location);
-
-				//Info Window HTML
-				var contentString = '<div id="contentB">' +
-										'<div id="siteNoticeB">' +
-										'</div>' +
-										'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
-										'<small>' + form_addr + '</small>'+
-									'</div>';
-
-				var infowindowB = new google.maps.InfoWindow({
-					content: contentString
-				});
-
-				if(searchMarkerB){ searchMarkerB.setMap(null); }
-				//Marker For Map
-				searchMarkerB = new google.maps.Marker({
-					position: location,
-					map: map,
-					title: name,
-					animation: google.maps.Animation.DROP,
-				});
-
-				//Open info Window and Add Listener
-				// infowindowB.open(map, searchMarker);
-				searchMarkerB.addListener('click', function() {
-					infowindowB.open(map, searchMarker);
-				});
-
-				console.log(searchMarker.position, searchMarkerB.position);
-				getDirections(searchMarker.position, searchMarkerB.position);
-				// API call for directions
-
-			}
-	})
-}
-
-var searchPlace = function(input, callback){
-	$.get( "/api/places/" + input, function( data ) {
-		var places = data.places;
-		if(places.length > 0){
-			callback(data);
-		}
+	// Get the graph for route-finding
+	$.get( "/api/busgraph", function( data ) {
+		console.log(data);
+		G = data;
 	});
-}
 
+
+	setTimeout(function() {
+
+		console.log(getPath("4140922","4195952"));
+		// console.log(getDirections("43.130403000:-77.637298998","43.1230503:-77.6269403"));
+
+	}, 1000);
+
+
+
+});
+var infowindow;
+var infowindowB;
 
 // Initializes all vehile markers on the map
 function initVehicles() {
@@ -238,7 +160,7 @@ function initVehicles() {
 				for(var x in vehicles){
 					var vehicle = vehicles[x];
 					var location = vehicle.location;
-					console.log("location", location);
+					// console.log("location", location);
 
 					initMarker(vehicle);
 				}
@@ -360,7 +282,7 @@ function buildRoutePaths() {
 // Returns the icon formatted properly with the correct color/size
 function getIcon(id) {
 	if(routeTable[id] == undefined) {
-		console.log(id);
+		// console.log(id);
 	}
 	// SVG from http://www.flaticon.com/free-icon/bus-side-view_61985
 	var icon = {
@@ -388,6 +310,154 @@ function getIcon(id) {
 	return icon;
 }
 
+
+//// Searching ////
+
+function searchAclicked() {
+	$("#search-container-B").removeClass("hidden");
+	$("#search-container-B").fadeIn(400);
+	lastA = $("#search-box").val();
+	if($("#search-boxB").val() != lastB) {
+		searchBclicked();
+	}
+	searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
+			$("#search-suggestions").hide();
+			var places = data.places;
+			for(var x in places){
+				var place = places[x];
+				// console.log(place);
+				var name = place.name;
+				var form_addr = place.formatted_address;
+				var location = place.geometry.location;
+
+				map.setCenter(location);
+
+				//Info Window HTML
+				var contentString = '<div id="content">' +
+										'<div id="siteNotice">' +
+										'</div>' +
+										'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
+										'<small>' + form_addr + '</small>'+
+									'</div>';
+
+				infowindow = new google.maps.InfoWindow({
+					content: contentString
+				});
+
+				if(searchMarker){ searchMarker.setMap(null); }
+				//Marker For Map
+				searchMarker = new google.maps.Marker({
+					position: location,
+					map: map,
+					title: name,
+					animation: google.maps.Animation.DROP,
+				});
+
+				//Open info Window and Add Listener
+				try {
+				infowindowB.close();
+				} catch(err) {}
+				infowindow.open(map, searchMarker);
+				searchMarker.addListener('click', function() {
+					infowindow.open(map, searchMarker);
+				});
+
+
+			}
+	})
+}
+
+function searchBclicked() {
+	lastB = $("#search-boxB").val();
+	if($("#search-box").val() != lastA) {
+		searchAclicked();
+	}
+	searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
+			$("#search-suggestionsB").hide();
+			var places = data.places;
+			for(var x in places){
+				var place = places[x];
+				// console.log(place);
+				var name = place.name;
+				var form_addr = place.formatted_address;
+				var location = place.geometry.location;
+
+				map.setCenter(location);
+
+				//Info Window HTML
+				var contentString = '<div id="contentB">' +
+										'<div id="siteNoticeB">' +
+										'</div>' +
+										'<h5 id="firstHeading" class="firstHeading">' + name + '</h5>' +
+										'<small>' + form_addr + '</small>'+
+									'</div>';
+
+				infowindowB = new google.maps.InfoWindow({
+					content: contentString
+				});
+
+				if(searchMarkerB){ searchMarkerB.setMap(null); }
+				//Marker For Map
+				searchMarkerB = new google.maps.Marker({
+					position: location,
+					map: map,
+					title: name,
+					animation: google.maps.Animation.DROP,
+				});
+
+				//Open info Window and Add Listener
+				try {
+				infowindow.close();
+				} catch(err) {}
+				infowindowB.open(map, searchMarkerB);
+				searchMarkerB.addListener('click', function() {
+					infowindowB.open(map, searchMarkerB);
+				});
+
+				// console.log(searchMarker.position, searchMarkerB.position);
+				getDirections(searchMarker.position, searchMarkerB.position);
+				// API call for directions
+
+			}
+	})
+}
+
+var searchPlace = function(input, callback){
+	// $.get( "/api/places/" + input, function( data ) {
+	$.get( "/api/places/" + input, function( data ) {
+		var places = data.places;
+		if(places.length > 0){
+			callback(data);
+		}
+	});
+}
+
+function toggleBoth() {
+	var searchB = $("#search-container-B");
+
+	if(searchB.hasClass("hidden")) {
+		searchB.hide();
+		$("#search-bar-buttonB").hide();
+		// $("#search-A-bar").fadeOut(200);
+		// $("#search-bar-button").fadeOut(200);
+		setTimeout(function() {
+			$("#search-bar-buttonB").fadeIn(500);
+		}, 200);
+		searchB.removeClass("hidden");
+		searchB.fadeIn(200);
+
+	}
+	else {
+		searchB.fadeOut(300);
+		$("#search-A-bar").fadeIn(200);
+		$("#search-bar-button").fadeIn(200);
+		setTimeout(function() {
+			searchB.addClass("hidden");
+		}, 400);
+	}
+}
+
+
 // Gets the directions from any start point to any end point (not just stops)
 function getDirections(start, end) {
 	// Convert start and end to Stop_IDs if neccessary (always for now)
@@ -395,6 +465,12 @@ function getDirections(start, end) {
 	// Just use Lat/Lng pairs always, for now (until Stops shortcut front-end is implemented)
 	var points = start.lat() + ":" + start.lng() + "," + end.lat() + ":" + end.lng();
 	console.log("Points = " + points);
+
+	var internalDirections = {};
+	$.get( "/api/closestStops/" + points, function( data ) {
+		internalDirections = data[0]; // Internal path (ignore the estimate value)
+	});
+	console.log("INTERNAL DIR:", internalDirections);
 	// Get request to getClosestStop to get Stop_IDs closest to start and and
 	// And ALSO the Google Directions from Start to Stop(Start) and for End too.
 
@@ -403,21 +479,154 @@ function getDirections(start, end) {
 
 
 	// getDirectionsInternal(Stop(start)), Stop(end))
-
+	// var stopA = "4130838"; // Stop(A)_ID (ID of the closest stop to start)
+	// var stopB = "4196010"; // Stop(B)_ID (ID of the closest stop to end)
+	// var internalPath = getPath(stopA, stopB)[0];
+	// console.log(internalPath);
+	// Find route in internalPath where enter = stopA
+	// Then trace back the full path until exit = stopB
 
 	// Add directions from start to Stop(end) (from getClosestStops endpoint)
-
-
+	return allDirections;
 }
 
-// Uses Dijkstra's algorithm to get directions from stop A to stop B
-function getDirectionsInteral(stopA, stopB) {
-	// Call busGraph endpoint to get G
 
-	// Dijkstra's algorithm to produce shortest path, weight = 100 if transfer lines, else 1
+var G = {}; // Vertices w edges in adjacency list representation (fastest)
+// timeToNextStop = ETA(B) - ETA(A) from vehicles response
 
-	// Return path = {route_id: {start, stop}}
-	// Object with all the different routes you have to take to get from A to B
-	// And the stop you must get on the line and get off the line
 
+
+// Returns list of cases (which route to start on),
+// each has estimates for all destinations from given src
+function dijkstras(src) {
+   var cases = [];
+   var options = Object.keys(G[src]);
+   for(var route in options) {
+      cases.push(dijkstraInternal(src, G[src][options[route]]));
+   }
+	console.log("CASES", cases);
+
+   return cases;
+}
+
+// Run for each possible starting route that passes through starting stop
+function dijkstraInternal(src, initialRoute) {
+	var estimates = {};
+	var unvisited = [];
+	var prev = {};
+	var route = {}; // The route_ID taken to get to each stop_ID from src
+
+   for(var v in G) {
+      estimates[v] = 9999;
+      unvisited.push(v);
+   }
+   estimates[src] = 0;
+   route[src] = initialRoute;
+
+   // console.log(initialRoute, G[src]);
+
+   while(unvisited.length > 0) {
+      // Pop v with min estimate[v] from unvisited
+		var pop = popMin(estimates, unvisited);
+      var v = pop[0];
+		unvisited = pop[1];
+      for(var u in G[v]) {
+			// console.log(estimates[G[v][u]]);
+         // console.log(src, v, G[v][u], route[v]); // next_id, route_id
+         // Need to minimize the route transfers (getting off and on a bus)
+         if(G[v][u] == route[v]) {
+				// console.log(u);
+            // Following the same route as we got to v
+            if(estimates[v] + 1 < estimates[u]) {
+               estimates[u] = estimates[v] + 1;
+               prev[u] = v;
+               route[u] = route[v];
+            }
+         }
+         else {
+            // Transferring a route, add 100 to cost b/c undesirable
+            if(estimates[v] + 101 < estimates[u]) {
+               estimates[u] = estimates[v] + 101;
+               prev[u] = v;
+               route[u] = G[v][u];
+            }
+         }
+      }
+   }
+   return [estimates, prev, route];
+}
+
+// Util for Dijkstra's algorithm
+// Removes and returns element w min estimate from unvisited
+function popMin(estimates, unvisited) {
+   var min = 99999;
+   var best;
+   var curr;
+   for(var v in unvisited) {
+      curr = estimates[unvisited[v]];
+      if(curr < min) {
+         min = curr;
+         best = v;
+      }
+   }
+   // console.log(unvisited[best], estimates[unvisited[best]]);
+   var result = unvisited[best];
+   unvisited.splice(best, 1);
+   return [result, unvisited];
+}
+
+// Run every time a query is made
+// Returns [path, estimate]
+// (Estimate = 100 * Transfers + 1 * Stops) so 216 = 16 stops and 2 transfers
+function getPath(src, dst) {
+   var res = dijkstras(src);
+	console.log(res);
+   // console.log(res[0][0]);
+   // Pick the best starting route, specific to A and B
+   // Needs to be here b/c it depends on B and dijkstras calculates for all B
+   var curr;
+   var best;
+   var min = 99999;
+   for(var c in res) {
+		console.log(res[c][0][dst]);
+
+      curr = res[c][0][dst];
+      if(curr < min) {
+         best = res[c];
+         min = curr;
+      }
+   }
+   // Debugging
+   if(best == undefined) {
+      console.log("Unreachable!");
+      return;
+   }
+
+   var ests = best[0];
+   var prev = best[1];
+   var route = best[2];
+   // console.log("ROUTE: ", route, " ; BEST: ", best);
+
+   // Trace back the path, printing the route
+   curr = dst;
+   var lastRoute = route[dst];
+   var path = {}; // List of {route_id: [enter, exit]} (usually will just be 1 triple)
+   // Unless they had to make a transfer.
+   path[lastRoute] = {"exit": dst};
+   while(curr != src) {
+      // console.log("CURR:", curr, "SRC:", src);
+      curr = prev[curr]; // Increment
+      // console.log("PREV:", prev);
+      if(route[curr] != lastRoute) {
+         path[lastRoute].enter = curr;
+         path[route[curr]] = {"exit": curr};
+         lastRoute = route[curr]; // Update last route used
+      }
+   }
+
+   path[lastRoute].enter = src; // Add entering the first segment
+   console.log(src, dst, "SRC : DST");
+   console.log("Path = ", path);
+
+   return [path, ests[dst]]; // Returns [path, estimate]
 }
