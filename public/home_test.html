@@ -14,6 +14,10 @@
 	<!-- Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+
+
+
 	<script src="js/home.js"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -60,6 +64,16 @@
 			#logo {
 				bottom: 20;
 			}
+		}
+
+		#results {
+			background: white;
+			border: 3;
+			margin-left: 1em;
+			margin-top: 5px;
+			border: 0;
+			border-radius: 5px;
+
 		}
     </style>
 
@@ -139,42 +153,40 @@
 			    	</div>
 				</div>
 	    		</div>
+				<div class="row">
+					<div id="results" class="col-md-3 col-sm-6 col-xs-12">
+
+					<!-- Query to Stop should be hidden if the query = the stop -->
+					<!-- Each segment should be collapsible, and you should be able to click on a stop to show on the map -->
+					<!-- Also needs an X icon so they can close the window -->
+					<!-- Need to handle scrollability for when it's too long (on mobile what do we do? hide the map?)-->
+					<h5>QueryA to StopA</h5>
+					<ul>
+						<li>Go left.</li>
+						<li>Go right.</li>
+						<li>Go home.</li>
+					</ul>
+					<h5>Take the Gold Line to Genessee and Congress (~10 mins)</h5>
+						 <p style="padding-left:1em;">
+							 Next Arrivals: 1:24pm, 1:55pm, 2:15pm.
+						 </p>
+					<h5>Take the Blue Line to URMC (~4 mins)</h5>
+					  <p style="padding-left:1em;">
+						  Next Arrivals: 1:54pm, 2:02pm, 2:11pm.
+					  </p>
+					<h5>StopB to QueryB</h5>
+					<ul>
+						<li>Go right.</li>
+						<li>Go left.</li>
+						<li>Go home.</li>
+					</ul>
+
+				</div>
+				<div class="col-md-9">
+				</div>
+
+				</div>
 	    		<!-- End Search Box Container -->
-
-
-	    		<script type="text/javascript">
-
-	    			$(document).ready(function(){
-	    				/*
-	        			var vehicleUpdater = setInterval(function(){
-	        				//Show All "vehicles"
-							$.get( "/api/vehicles?agencies=283", function( data ) {
-									console.log("SUCCESS", data);
-									var vehicles = data.vehicles.data["283"];
-									if(vehicles.length > 0){
-
-										for(var x in vehicles){
-											var vehicle = vehicles[x];
-											var location = vehicle.location;
-
-											var marker = new google.maps.Marker({
-									          position: location,
-									          map: map
-									        });
-
-										}
-									}
-							});
-	        			}, 2000);
-						*/
-
-
-
-
-
-					});
-
-	    		</script>
 
 	    	</div>
 
@@ -182,5 +194,9 @@
 	</div>
 
 </body>
+
+<!-- Marker Animation Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js"></script>
 
 </html>

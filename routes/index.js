@@ -345,6 +345,11 @@ router.get('/gDistance', cache('1 minute'), (req, res) => {
 
 });
 
+/*
+Function to calulate distance between 2 coordinates
+Credit For Original Function: http://www.movable-type.co.uk/scripts/latlong.html
+Adapted to handle 'NaN' results
+*/
 function dist(lat1, lon1, lat2, lon2){
 	var R = 6371e3; // metres
 	var φ1 = lat1 * 3.14 / 180;
@@ -358,6 +363,10 @@ function dist(lat1, lon1, lat2, lon2){
 	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
 	var d = R * c;
+	
+	if(isNaN(d)){
+		d = Number.MAX_SAFE_INTEGER;
+	}
 	return d;
 }
 
@@ -385,8 +394,9 @@ router.get('/closestStop', cache('1 minute'), (req, res) => {
 
 		for(var i=1; i< point_keys.length; i++){
 			var p = point_keys[i].split(","); //Split active point into parts
-			if(dist(p[0],p[1],q[0],q[1]) < minDist || minDist == -1) {
-				minDist = dist(p,q);
+			var distance = dist(p[0],p[1],q[0],q[1]);
+			if((distance < minDist || minDist == -1) && !isNaN(distance)) {
+				minDist = distance;
 				closestPair = {start: q[0] + "," + q[1], stop: p[0] + "," + p[1]};
 			}
 		}
@@ -406,11 +416,11 @@ router.get('/closestStop', cache('1 minute'), (req, res) => {
 	}
 
 	if(latlng_pairs.length == 2){
-		console.log("finding directions", data.stop_pairs[0]);
+		console.log("finding directions", data.stop_pairs[0], data.stop_pairs[1]);
 		directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result){
 			var googleDirections = [result];
 			// directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result2){
-			directions.directionsGoogle(data.stop_pairs[1].stop, data.stop_pairs[1].start, function(result2){
+			directions.directionsGoogle(data.stop_pairs[1].start, data.stop_pairs[1].stop, function(result2){
 				googleDirections.push(result2);
 				res.status(200).json({"data" : {"points" :data, "directions": googleDirections}});
 			});

@@ -116,14 +116,7 @@ $(document).ready(function(){
 						for(var y in markers) {
 							var marker = markers[y];
 							if(marker.id == id) {
-
-								var diff = newLocation.lat - marker.position.lat() + (newLocation.lng - marker.position.lng());
-								diff *= 1000;
-								// console.log(diff);
-								if(diff > -5 && diff < 5 && diff != 0) {
-									marker.setPosition(newLocation);
-									marker.setMap(map);
-								}
+								marker.setPosition(newLocation);
 							}
 						}
 					}
@@ -165,25 +158,6 @@ function initVehicles() {
 					initMarker(vehicle);
 				}
 			}
-
-	for(var x in vehicles){
-	  var vdata = vehicles[x];
-	  var vehicle = {};
-
-	  vehicle.id = vdata.vehicle_id;
-	  vehicle.route = vdata.route_id;
-	  vehicle.location = vdata.location;
-	  vehicle.name = vdata.call_name;
-	  vehicle.marker = new google.maps.Marker({
-			position: vehicle.location,
-			// map: map,
-			title: vehicle.name,
-			icon: getIcon(vehicle.route)
-		 });
-
-	  vehicleList.push(vehicle);
-
-	}
 });
 	buildRoutePaths();
 
@@ -192,7 +166,7 @@ function initVehicles() {
 
 // Initializes single vehicle marker
 function initMarker(vehicle) {
-	var marker = new google.maps.Marker({
+	var marker = new SlidingMarker({
 		 position: vehicle.location,
 		 map: map, // Makes it appear on the map
 		 icon: getIcon(vehicle.route_id),
@@ -262,7 +236,8 @@ function buildRoutePaths() {
                     path: seg.points,
                     strokeColor: "#" + color,
                     strokeOpacity: 1.0,
-                    strokeWeight: 2.0
+                    strokeWeight: 2.0,
+                    title: route.long_name
                 });
 
                 polylineList[seg.id] = line;
