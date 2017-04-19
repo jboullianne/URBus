@@ -20,8 +20,7 @@ module.exports = {
 	findPlaces: function(query, callback){
 		googleMapsClient.places({
 			"query": query,
-         location: {lat: 43.128397, lng: -77.628681},
-         radius: 2000
+         	location: {lat: 43.128397, lng: -77.628681}
 		}, function(err, response) {
 			if(!err) {
 				callback(response.json.results);
@@ -84,6 +83,21 @@ module.exports = {
             callback(response.json);
          }
       });
-   }
+   },
+
+   photo: function(query, callback){
+   	console.log("IN DIRECTIONS PHOTO;", query);
+   		googleMapsClient.placesPhoto({
+   			photoreference: query,
+   			maxwidth: 400,
+   		}, function(err, response){
+   			console.log(repsonse);
+   			if(!err){
+   				
+   				callback(response);
+   			}
+   			console.log("ERROR:", err);
+   		});
+   },
 
 }

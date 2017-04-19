@@ -1,0 +1,62 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+#invisible {
+    font-size: 24px;
+    padding: 10px;
+}
+.InputSection {
+    height: 100px;
+    background-color: rebeccapurple;
+}
+input {
+    display: block;
+    margin: auto;
+    font-size: 24px;
+}
+#Map {
+    background-color: blue;
+    height: calc(100vh - 100px);
+}
+#viewTwo, #viewOne {
+    display: none;
+    margin: auto;
+    text-align: center;
+}
+#Filter, #FilterTwo {
+    height: 400px;
+    background-color: red;
+    overflow: scroll;
+
+}
+ul, li {
+    margin: 0;
+    list-style-type: none;
+    font-size: 22px;
+
+}
+li {
+    border-bottom: 1px solid black;
+    padding: 0 5px 0 5px;
+}
+ul {
+    padding: 0;
+    margin: 0;
+}
+p {
+    margin-top: 10px;
+    padding: 0;
+}
+.weather {
+    position: absolute;
+    right: 0;
+    top: 30px;
+}
+.fa {
+    width: 100%;
+    font-size: 18px;
+}

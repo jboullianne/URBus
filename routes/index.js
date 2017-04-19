@@ -259,6 +259,21 @@ router.get('/places/:query', cache('5 minutes'), (req, res) => {
 });
 
 /*
+	ABOUT: Makes a Places Request to the Google APIs
+	PARAMS:
+		REQUIRED: NONE
+		OPTIONAL:
+			query	(STRING): A search query to find a place in Google's Places Database
+*/
+router.get('/photo/:photo_id', (req, res) => {
+	var query = req.params.photo_id;
+	console.log("PHOTO REFERENCE:", query);
+	directions.photo(query, function(data){
+		res.status(200).json({"photo" : data});
+	});
+});
+
+/*
 	ABOUT: Makes a Places AutoComplete Request to the Google APIs
 	PARAMS:
 		REQUIRED: NONE
@@ -363,7 +378,7 @@ function dist(lat1, lon1, lat2, lon2){
 	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
 	var d = R * c;
-	
+
 	if(isNaN(d)){
 		d = Number.MAX_SAFE_INTEGER;
 	}
@@ -420,7 +435,7 @@ router.get('/closestStop', cache('1 minute'), (req, res) => {
 		directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result){
 			var googleDirections = [result];
 			// directions.directionsGoogle(data.stop_pairs[0].start, data.stop_pairs[0].stop, function(result2){
-			directions.directionsGoogle(data.stop_pairs[1].start, data.stop_pairs[1].stop, function(result2){
+			directions.directionsGoogle(data.stop_pairs[1].stop, data.stop_pairs[1].start, function(result2){
 				googleDirections.push(result2);
 				res.status(200).json({"data" : {"points" :data, "directions": googleDirections}});
 			});
@@ -433,7 +448,7 @@ router.get('/closestStop', cache('1 minute'), (req, res) => {
 
 });
 
-router.get('/busgraph', cache('1 minute'), (req, res) => {
+router.get('/busgraph', cache('30 minutes'), (req, res) => {
 	res.status(200).json(Graph);
 });
 
@@ -480,68 +495,83 @@ function setupBusGraph(){
 
 			for(var x in routes){
 				var route = routes[x];
+				
+				// IF ROUTE IS NOT ACTIVE: continue (skip)
+				// Only create graoh for active routes
+				if(route.is_active){
+					var route_id 	= route.route_id;
+					var stops 		= route.stops;
 
-				var route_id 	= route.route_id;
-				var stops 		= route.stops;
+					for(var y=0; y<stops.length -1; y++){
+						var stop = stops[y];
+						var next = stops[y+1];
 
-				for(var y=0; y<stops.length -1; y++){
-					var stop = stops[y];
-					var next = stops[y+1];
+						if(Graph[stop]){
+							console.log("Stop visited");
+							Graph[stop][next] = route_id;
+						}else{
+							console.log("Not visited");
+							Graph[stop] = {};
+							Graph[stop][next] = route_id;
+						}
 
-					if(Graph[stop]){
-						console.log("Stop visited");
-						Graph[stop][next] = route_id;
-					}else{
-						console.log("Not visited");
-						Graph[stop] = {};
-						Graph[stop][next] = route_id;
+						console.log("STOP: ", stop);
 					}
 
-					console.log("STOP: ", stop);
-				}
+					if(stops.length != 0){
+						var stop = stops[stops.length-1];
+						var next = stops[0];
 
-				if(stops.length != 0){
-					var stop = stops[stops.length-1];
-					var next = stops[0];
-
-					if(Graph[stop]){
-						console.log("Stop visited");
-						Graph[stop][next] = route_id;
-					}else{
-						console.log("Not visited");
-						Graph[stop] = {};
-						Graph[stop][next] = route_id;
+						if(Graph[stop]){
+							console.log("Stop visited");
+							Graph[stop][next] = route_id;
+						}else{
+							console.log("Not visited");
+							Graph[stop] = {};
+							Graph[stop][next] = route_id;
+						}
 					}
 				}
-
-
 
 			}
 
-			console.log(Graph);
+			populateStops(function(stop_data){
+				for(var x in stop_data.body.data){// For each Stop
+					var stop = stop_data.body.data[x];
+
+					var is_active = false;
+					for(var y in routes){
+						var route_is_active = routes[y].is_active;
+						var index = stop.routes.indexOf(routes[y].route_id);
+						is_active |= (index != -1 && route_is_active);
+					}
+
+					if(is_active){
+						var lat = stop.location.lat;
+						var lng = stop.location.lng;
+
+						stop_map[lat + "," + lng] = stop.stop_id;	
+					}
+				}
+				console.log("STOP COUNT:", Object.keys(stop_map).length);
+			});
+			
+
+			
 		});
 }
 
 
 /* END BUS GRAPH FUNCTIONS */
 
-populateStops();
 
-function populateStops(){
+
+function populateStops(callback){
 	var url = "https://transloc-api-1-2.p.mashape.com/stops.json?callback=call&agencies=283";
 		unirest.get(url)
 		.header("X-Mashape-Key", "1oUioRIEA1msh9uNwrByVr1TZMLpp1tD3F1jsnrJ4b0UUdx8ae")
 		.header("Accept", "application/json")
 		.end(function (result) {
-			for(var x in result.body.data){// For each Stop
-				var stop = result.body.data[x];
-
-				var lat = stop.location.lat;
-				var lng = stop.location.lng;
-
-				stop_map[lat + "," + lng] = stop.stop_id;
-
-			}
-			console.log("KEYS:", Object.keys(stop_map));
+			callback(result);
 	});
 }

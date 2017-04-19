@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bus App</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="font-awesome.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- start of app -->
+    <div ng-app="myApp" ng-controller="namesCtrl" class="NavBar">
+        <div class="InputSection">
+            <form onsubmit="handleSubmit(event)">
+                <input placeholder="Start" ng-model="filterTwo" id="InputOne" type="text">
+                <input placeholder="End" ng-model="filterOne" id="InputTwo" type="text">
+                <input type="Submit" id="invisible">
+            </form>
+            <div class="weather">
+                <i class="fa fa-sun-o" aria-hidden="true"></i><span class="temp">12F</span>
+                <i class="fa fa-tint" aria-hidden="true"></i><span class="temp">23%</span>
+            </div>
+        </div>
+        <div id="viewOne">
+            <ul id="Filter">
+                <li ng-repeat="y in names | filter : filterOne" ng-click="FirstFilter(y)">
+                    <p> {{ y }}</p>
+                </li>
+            </ul>
+        </div>
+        <div id="viewTwo">
+            <ul id="FilterTwo">
+                <li ng-repeat="x in names | filter : filterTwo" ng-click="SecondFilter(x)">
+                    <p> {{ x }}</p>
+                </li>
+            </ul>
+        </div>
+        <div class="WeatherSection">
+
+        </div>
+
+
+    </div> <!-- end of app -->
+    <div id="Map">
+
+    </div>
+    <!-- bus code -->
+    <script>
+        var map = "";
+        function initMap() {
+            var uluru = {lat: 43.128397, lng: -77.628681};
+            map = new google.maps.Map(document.getElementById('Map'), {
+                zoom: 15,
+                center: uluru,
+                disableDefaultUI: true,
+                clickableIcons: true
+            });
+
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfWoPWJw8uWXprI_uL3D1TQ10Df-atWkY&callback=initMap&libraries=geometry"></script>
+    <!-- jQuery -->
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <!-- Angular -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="main.js" type="text/javascript"></script>
+</body>
+</html>
