@@ -495,8 +495,7 @@ function setupBusGraph(){
 
 			for(var x in routes){
 				var route = routes[x];
-				
-				// IF ROUTE IS NOT ACTIVE: continue (skip)
+
 				// Only create graoh for active routes
 				if(route.is_active){
 					var route_id 	= route.route_id;
@@ -550,14 +549,14 @@ function setupBusGraph(){
 						var lat = stop.location.lat;
 						var lng = stop.location.lng;
 
-						stop_map[lat + "," + lng] = stop.stop_id;	
+						stop_map[lat + "," + lng] = stop.stop_id;
 					}
 				}
 				console.log("STOP COUNT:", Object.keys(stop_map).length);
 			});
-			
 
-			
+
+
 		});
 }
 

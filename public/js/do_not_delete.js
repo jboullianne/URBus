@@ -41,6 +41,12 @@ var stopIWList = [];
 $(document).ready(function(){
 
   console.log("Home.js Ready");
+  $("head").append('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js" async defer></script>');
+  $("head").append('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js" async defer></script>');
+
+
+  // <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js"></script>
+  // <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js"></script>
 
   //Load All Needed Data on Page Load
   $.get("/api/routes?agencies=283", function(data) {
@@ -83,14 +89,10 @@ $(document).ready(function(){
   });
 
 
-
-
-
   $("#search-box").keydown(function(e){
    //  if(e.key == "Enter"){ //Search For Input
    shortcutA = 0; // They typed something, reset shortcut
     if(e.keyCode == 13){ //Search For Input
-
       resetSearchResults();
       searchAclicked(true);
       $("#search-boxB").focus();
@@ -390,14 +392,12 @@ function initStopMarker(stop){
     stopWindow.open(map, this)
 
 
-   // setTimeout(function() {
       console.log($("#content").html());
 
         $("#" + stop.stop_id + "_to").click(function() {
               console.log(stop.stop_id + "_to clicked!");
               $("#search-boxB").val(stopTable[stop.stop_id].name);
               shortcutB = stop.stop_id;
-
               searchBclicked();
         });
         $("#" + stop.stop_id + "_from").click(function() {
@@ -407,7 +407,6 @@ function initStopMarker(stop){
             searchBclicked();
 
        });
-   // }, 1500);
 
 
   });
@@ -665,8 +664,10 @@ function resetSearchResults(){
 //// Searching ////
 
 function searchAclicked(will_center, callback) {
+   $("#search-box").blur(); // Removes the keyboard on mobile
   $("#search-container-B").removeClass("hidden");
   $("#search-container-B").fadeIn(400);
+
   lastA = $("#search-box").val();
 
   searchPlace(encodeURIComponent($("#search-box").val() + " "),function(data){
@@ -678,6 +679,11 @@ function searchAclicked(will_center, callback) {
         var name = place.name;
         var form_addr = place.formatted_address;
         var location = place.geometry.location;
+        if(shortcutA != 0) {
+           location = stopTable[shortcutA].location;
+           name = stopTable[shortcutA].name;
+           form_addr = "";
+        }
       //   var reference = place.photos[0].photo_reference;
 
       //   $.get( "/api/photo/" + reference, function( data ) {
@@ -742,6 +748,7 @@ function searchAclicked(will_center, callback) {
 
 function searchBclicked() {
   lastB = $("#search-boxB").val();
+   $("#search-boxB").blur(); // Removes the keyboard on mobile
   searchAclicked(false, function(){
     searchPlace(encodeURIComponent($("#search-boxB").val() + " "),function(data){
       $("#search-suggestionsB").hide();
@@ -752,7 +759,11 @@ function searchBclicked() {
         var name = place.name;
         var form_addr = place.formatted_address;
         var location = place.geometry.location;
-
+        if(shortcutB != 0) {
+           location = stopTable[shortcutB].location;
+           name = stopTable[shortcutB].name;
+           form_addr = "";
+      }
         //Info Window HTML
         var contentString = '<div id="contentB">' +
                     '<div id="siteNoticeB">' +
@@ -767,12 +778,13 @@ function searchBclicked() {
 
         if(searchMarkerB){ searchMarkerB.setMap(null); }
         //Marker For Map
-        searchMarkerB = new google.maps.Marker({
-          position: location,
-          map: map,
-          title: name,
-          animation: google.maps.Animation.DROP,
-        });
+           searchMarkerB = new google.maps.Marker({
+             position: location,
+             map: map,
+             title: name,
+             animation: google.maps.Animation.DROP,
+           });
+
 
         //Open info Window and Add Listener
         hideAllInfoWindows();
@@ -798,19 +810,17 @@ function directionsCallback(data) {
   data = data.data;
   console.log("Directions from server: ", data);
 
-  //Set map to an overview of the directions
-  var bounds = new google.maps.LatLngBounds();
-  bounds.extend(searchMarker.position);
-  bounds.extend(searchMarkerB.position);
-  map.fitBounds(bounds);
+
 
   hideAllRoutes();
   var locStopA = data.points.stop_pairs[0].stop;
   var locStopB = data.points.stop_pairs[1].stop;
   // If a stop was directly selected....
+  console.log("SHORTCUTS: ", shortcutA, shortcutB);
   if(shortcutA != 0) {
       locStopA = stopTable[shortcutA].location.lat+","+stopTable[shortcutA].location.lng;
       searchMarker.setTitle(stopTable[shortcutA].name);
+      searchMarker.setPosition(stopTable[shortcutA].location);
       console.log(searchMarker.title);
       var contentString = '<div id="contentB">' +
                   '<div id="siteNoticeB">' +
@@ -822,6 +832,7 @@ function directionsCallback(data) {
   if(shortcutB != 0) {
       locStopB = stopTable[shortcutB].location.lat+","+stopTable[shortcutB].location.lng
       searchMarkerB.setTitle(stopTable[shortcutB].name);
+      searchMarkerB.setPosition(stopTable[shortcutB].location);
       console.log(searchMarkerB.title);
       var contentStringB = '<div id="contentB">' +
                   '<div id="siteNoticeB">' +
@@ -831,6 +842,14 @@ function directionsCallback(data) {
       infowindowB.setContent(contentStringB);
 
   }
+
+  //Set map to an overview of the directions
+  var bounds = new google.maps.LatLngBounds();
+  bounds.extend(searchMarker.position);
+  bounds.extend(searchMarkerB.position);
+  map.fitBounds(bounds);
+  map.setZoom(map.getZoom() - 1);
+
  //  console.log(locStopA, locStopB);
 
  $("#results").html("<div><i class='fa fa-close' id='closeResults' style='color:grey;position:absolute;right:.7em;top:.7em;'></i></div>");
@@ -857,6 +876,9 @@ function directionsCallback(data) {
       }catch(err){
         console.log(err);
       }
+      $("#results").append("<div class='dir-step'><small>Starting from:</small></br><b>" + searchMarker.title + "</b></div>");
+
+      if(shortcutA == 0) {
       polylineA = new google.maps.Polyline({
                   path: google.maps.geometry.encoding.decodePath(directions.routes[0].overview_polyline.points),
                   strokeColor: "#4286f4",
@@ -865,13 +887,12 @@ function directionsCallback(data) {
                   title: "ROUTE TO STOP",
                   map: map
              });
+
              //polylineA.setMap(map);
-             $("#results").append("<div class='dir-step'><small>Starting from:</small></br><b>" + searchMarker.title + "</b></div>");
-             if(!shortcutA) {
 
              $("#results").append("<ul>");
-             for(var x in directions.routes[0].legs[0].steps){
-                var step = directions.routes[0].legs[0].steps[x];
+             for(var y in directions.routes[0].legs[0].steps){
+                var step = directions.routes[0].legs[0].steps[y];
                 var dir_html = "<li>" + step.html_instructions + "</li>";
 
                 $("#results").append(dir_html);
@@ -881,12 +902,19 @@ function directionsCallback(data) {
           }
           // Adds internal directions
           $("#results").append("<div class='dir-step' id='internalResults'></div>");
-          addInternalDirections(locStopA, locStopB);
+
+          if(addInternalDirections(locStopA, locStopB) == -1) { // Error, no way!
+             $("#results").html("<h5>Unable to find an active route, try again later or with different locations.</h5>");
+             $("#results").fadeIn(300);
+             showActiveRoutes();
+             return;
+          }
     }
     if(x == 1){
        if(polylineB) { // clears last search
           polylineB.setMap(null);
        }
+       if(shortcutB == 0) {
       polylineB = new google.maps.Polyline({
                   path: google.maps.geometry.encoding.decodePath(directions.routes[0].overview_polyline.points),
                   strokeColor: "#4286f4",
@@ -896,10 +924,9 @@ function directionsCallback(data) {
              });
              polylineB.setMap(map);
 
-            if(!shortcutB) {
              $("#results").append("<ul>");
-             for(var x in directions.routes[0].legs[0].steps){
-                var step = directions.routes[0].legs[0].steps[x];
+             for(var y in directions.routes[0].legs[0].steps){
+                var step = directions.routes[0].legs[0].steps[y];
                 console.log("STEP:",step);
                 var dir_html = "<li>" + step.html_instructions + "</li>";
                 console.log(dir_html);
@@ -908,16 +935,13 @@ function directionsCallback(data) {
                 }
              }
              $("#results").append("</ul>");
-
           }
     }
-
-    // Only append if Google didn't already say it.
-   if($("#results").html().indexOf("arrived at") == -1) {
-      $("#results").append("<div class='dir-step'><small>You have arrived at:</small></br><b>" + searchMarkerB.title + "</b></div>");
   }
-
-  }
+  // Only append if Google didn't already say it.
+  if($("#results").html().indexOf("arrived at") == -1) {
+    $("#results").append("<div style='margin-top:1em;' class='dir-step'><small>You have arrived at:</small></br><b>" + searchMarkerB.title + "</b></div>");
+   }
   $("#results").fadeIn(300);
 
 
@@ -945,7 +969,15 @@ function addInternalDirections(locA, locB) {
    // console.log("STOP A AND B: ", stopA, stopB);
    var res = $("#internalResults");
    // Call getPath(stopA, stopB)
-   var path = getPath(stopA, stopB)[0];
+   try {
+   var path = getPath(stopA, stopB);
+   } catch(err) {
+      return -1;
+   }
+   if(path == 0 || path == undefined) { // ERROR
+      return -1;
+   }
+   path = path[0];
    var includedStops = [];
    console.log(stopTable);
    for(var r in path) {
@@ -1064,7 +1096,9 @@ function dijkstras(src) {
    var cases = [];
    var options = Object.keys(G[src]);
    for(var route in options) {
-      cases.push(dijkstraInternal(src, G[src][options[route]]));
+      console.log(routeTable);
+      console.log(route, options[route]);
+         cases.push(dijkstraInternal(src, G[src][options[route]]));
    }
   console.log("CASES", cases);
 
@@ -1086,31 +1120,40 @@ function dijkstraInternal(src, initialRoute) {
    route[src] = initialRoute;
 
    // console.log(initialRoute, G[src]);
-
+   var safety = 0;
    while(unvisited.length > 0) {
+      if(safety > 1000) {
+         return 0; // Error!
+      }
+      safety++;
       // Pop v with min estimate[v] from unvisited
     var pop = popMin(estimates, unvisited);
       var v = pop[0];
     unvisited = pop[1];
       for(var u in G[v]) {
+         // console.log(" IS ACTIVE = ", routeTable[route[v]].is_active);
+         if(routeTable[G[v][u]] != undefined && routeTable[G[v][u]].is_active) {
+
+         // if(routeTable[route[v]].is_active) {
       // console.log(estimates[G[v][u]]);
          // console.log(src, v, G[v][u], route[v]); // next_id, route_id
          // Need to minimize the route transfers (getting off and on a bus)
-         if(G[v][u] == route[v]) {
-        // console.log(u);
-            // Following the same route as we got to v
-            if(estimates[v] + 1 < estimates[u]) {
-               estimates[u] = estimates[v] + 1;
-               prev[u] = v;
-               route[u] = route[v];
+            if(G[v][u] == route[v]) {
+           // console.log(u);
+               // Following the same route as we got to v
+               if(estimates[v] + 1 < estimates[u]) {
+                  estimates[u] = estimates[v] + 1;
+                  prev[u] = v;
+                  route[u] = route[v];
+               }
             }
-         }
-         else {
-            // Transferring a route, add 100 to cost b/c undesirable
-            if(estimates[v] + 101 < estimates[u]) {
-               estimates[u] = estimates[v] + 101;
-               prev[u] = v;
-               route[u] = G[v][u];
+            else {
+               // Transferring a route, add 100 to cost b/c undesirable
+               if(estimates[v] + 101 < estimates[u]) {
+                  estimates[u] = estimates[v] + 101;
+                  prev[u] = v;
+                  route[u] = G[v][u];
+               }
             }
          }
       }
@@ -1150,7 +1193,10 @@ function getPath(src, dst) {
    var best;
    var min = 99999;
    for(var c in res) {
-    console.log(res[c][0][dst]);
+      if(res[c] == 0) { // Was Error
+         continue;
+      }
+      console.log(res[c][0][dst]);
 
       curr = res[c][0][dst];
       if(curr < min) {
@@ -1176,7 +1222,12 @@ function getPath(src, dst) {
    // Unless they had to make a transfer.
    // path[lastRoute] = {"exit": dst};
 	path.push({"route_id": lastRoute, "exit": dst})
+   var safety = 0;
    while(curr != src) {
+      safety++;
+      if(safety > 1000) {
+         return 0;
+      }
       curr = prev[curr]; // Increment
       if(route[curr] != lastRoute) {
          path[0].enter = curr; // Finish entry for the last one

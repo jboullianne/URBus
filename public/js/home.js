@@ -610,21 +610,25 @@ function dijkstraInternal(src, initialRoute) {
       // console.log(estimates[G[v][u]]);
          // console.log(src, v, G[v][u], route[v]); // next_id, route_id
          // Need to minimize the route transfers (getting off and on a bus)
-         if(G[v][u] == route[v]) {
-        // console.log(u);
-            // Following the same route as we got to v
-            if(estimates[v] + 1 < estimates[u]) {
-               estimates[u] = estimates[v] + 1;
-               prev[u] = v;
-               route[u] = route[v];
+         console.log(routeTable[route[v]].is_active);
+
+         if(routeTable[route[v]].is_active) {
+            if(G[v][u] == route[v]) {
+           // console.log(u);
+               // Following the same route as we got to v
+               if(estimates[v] + 1 < estimates[u]) {
+                  estimates[u] = estimates[v] + 1;
+                  prev[u] = v;
+                  route[u] = route[v];
+               }
             }
-         }
-         else {
-            // Transferring a route, add 100 to cost b/c undesirable
-            if(estimates[v] + 101 < estimates[u]) {
-               estimates[u] = estimates[v] + 101;
-               prev[u] = v;
-               route[u] = G[v][u];
+            else {
+               // Transferring a route, add 100 to cost b/c undesirable
+               if(estimates[v] + 101 < estimates[u]) {
+                  estimates[u] = estimates[v] + 101;
+                  prev[u] = v;
+                  route[u] = G[v][u];
+               }
             }
          }
       }
@@ -656,7 +660,7 @@ function popMin(estimates, unvisited) {
 // (Estimate = 100 * Transfers + 1 * Stops) so 216 = 16 stops and 2 transfers
 function getPath(src, dst) {
    var res = dijkstras(src);
-  console.log(res);
+   console.log(res);
    // console.log(res[0][0]);
    // Pick the best starting route, specific to A and B
    // Needs to be here b/c it depends on B and dijkstras calculates for all B
