@@ -41,12 +41,9 @@ var stopIWList = [];
 $(document).ready(function(){
 
   console.log("Home.js Ready");
+  // Animation JS
   $("head").append('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js" async defer></script>');
   $("head").append('<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js" async defer></script>');
-
-
-  // <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js"></script>
-  // <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js"></script>
 
   //Load All Needed Data on Page Load
   $.get("/api/routes?agencies=283", function(data) {
@@ -220,8 +217,21 @@ $(document).ready(function(){
   });
   // Reverts to default view of only the active routes
   $("#reset-view").click(function() {
+     map.setZoom(15);
+     map.setCenter({lat: 43.128397, lng: -77.628681});
      showActiveRoutes();
  });
+
+// Deselect all routes
+ $("#uncheckAll").click(function() {
+   hideAllRoutes();
+});
+
+// Help Button
+$("#helpButton").tooltip({title: "Search any location (i.e. Chipotle, Rush Rhees, RIT) with the search bars on the top left to get directions using the UR Shuttle system! Hide and show routes with the panel on the right (Desktop only). Powered by Transloc and Google Maps.",
+   placement: "top", trigger: "hover"});
+
+
 
 // Clicking anywhere on Display On/Off bar shows/hides the body
  $("#displayPanelTop").click(function() {
@@ -397,12 +407,14 @@ function initStopMarker(stop){
         $("#" + stop.stop_id + "_to").click(function() {
               console.log(stop.stop_id + "_to clicked!");
               $("#search-boxB").val(stopTable[stop.stop_id].name);
+              hideAllInfoWindows();
               shortcutB = stop.stop_id;
               searchBclicked();
         });
         $("#" + stop.stop_id + "_from").click(function() {
             console.log(stop.stop_id + "_from clicked!");
             $("#search-box").val(stopTable[stop.stop_id].name);
+            hideAllInfoWindows();
             shortcutA = stop.stop_id;
             searchBclicked();
 
@@ -556,7 +568,7 @@ function hideRoute(route_id){
     }
 
     if(stop_in_route && !stop_active){
-      console.log("STOP:", stop_in_route, stop_active, stopMarkerList[x]);
+      // console.log("STOP:", stop_in_route, stop_active, stopMarkerList[x]);
       stopMarkerList[x].setMap(null);
     }
 
@@ -982,6 +994,7 @@ function addInternalDirections(locA, locB) {
    console.log(stopTable);
    for(var r in path) {
       var route = path[r];
+      console.log("ER ROUTE ID = ", route.route_id);
       showRoute(route.route_id);
       $('#route-handler' + route.route_id).prop('checked', true);
       var routeName = routeTable[route.route_id].long_name;
@@ -1095,10 +1108,12 @@ var G = {}; // Vertices w edges in adjacency list representation (fastest)
 function dijkstras(src) {
    var cases = [];
    var options = Object.keys(G[src]);
-   for(var route in options) {
-      console.log(routeTable);
-      console.log(route, options[route]);
-         cases.push(dijkstraInternal(src, G[src][options[route]]));
+   for(var next in options) { // Each possible next_stop (2nd stop)
+      // console.log(G[options[next]]);
+      for(var route in Object.keys(G[options[next]])) { // Each possible way to get there (initial route)
+         var startingRoute = G[src][options[next]][route];
+         cases.push(dijkstraInternal(src, startingRoute));
+      }
    }
   console.log("CASES", cases);
 
@@ -1111,13 +1126,14 @@ function dijkstraInternal(src, initialRoute) {
   var unvisited = [];
   var prev = {};
   var route = {}; // The route_ID taken to get to each stop_ID from src
-
+  // Initialization
    for(var v in G) {
       estimates[v] = 9999;
       unvisited.push(v);
    }
    estimates[src] = 0;
    route[src] = initialRoute;
+   console.log("INITIAL = ", initialRoute);
 
    // console.log(initialRoute, G[src]);
    var safety = 0;
@@ -1127,18 +1143,19 @@ function dijkstraInternal(src, initialRoute) {
       }
       safety++;
       // Pop v with min estimate[v] from unvisited
-    var pop = popMin(estimates, unvisited);
+      var pop = popMin(estimates, unvisited);
       var v = pop[0];
-    unvisited = pop[1];
-      for(var u in G[v]) {
+      unvisited = pop[1];
+      for(var u in G[v]) { // For each next_stop
+         for(var r in G[v][u]) { // for each route to get to that stop from curr_stop
          // console.log(" IS ACTIVE = ", routeTable[route[v]].is_active);
-         if(routeTable[G[v][u]] != undefined && routeTable[G[v][u]].is_active) {
+         if(routeTable[G[v][u][r]] != undefined && routeTable[G[v][u][r]].is_active) {
 
          // if(routeTable[route[v]].is_active) {
       // console.log(estimates[G[v][u]]);
          // console.log(src, v, G[v][u], route[v]); // next_id, route_id
          // Need to minimize the route transfers (getting off and on a bus)
-            if(G[v][u] == route[v]) {
+            if(G[v][u][r] == route[v]) {
            // console.log(u);
                // Following the same route as we got to v
                if(estimates[v] + 1 < estimates[u]) {
@@ -1152,10 +1169,11 @@ function dijkstraInternal(src, initialRoute) {
                if(estimates[v] + 101 < estimates[u]) {
                   estimates[u] = estimates[v] + 101;
                   prev[u] = v;
-                  route[u] = G[v][u];
+                  route[u] = G[v][u][r];
                }
             }
          }
+      }
       }
    }
    return [estimates, prev, route];
@@ -1223,11 +1241,13 @@ function getPath(src, dst) {
    // path[lastRoute] = {"exit": dst};
 	path.push({"route_id": lastRoute, "exit": dst})
    var safety = 0;
+   var s = "";
    while(curr != src) {
       safety++;
       if(safety > 1000) {
          return 0;
       }
+      s = curr + " - " + stopTable[curr].name + "\n" + s;
       curr = prev[curr]; // Increment
       if(route[curr] != lastRoute) {
          path[0].enter = curr; // Finish entry for the last one
@@ -1236,7 +1256,9 @@ function getPath(src, dst) {
          lastRoute = route[curr]; // Update last route used
       }
    }
+   s = curr + " - " + stopTable[curr].name + "\n" + s;
 
+   console.log("path: ", s);
    path[0].enter = src; // Add entering the first segment
    console.log(src, dst, "SRC : DST");
    console.log("Path = ", path);

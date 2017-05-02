@@ -128,8 +128,8 @@ router.get('/estimates', cache('1 minute'), (req, res) => {
 		OPTIONAL: NONE
 
 */
-router.get('/routes', cache("30 minutes"), (req, res) => {
-	console.log("^ Route Now Cached For 30 Minutes.");
+router.get('/routes', cache("5 minutes"), (req, res) => {
+	console.log("^ Route Now Cached For 5 Minutes.");
 
 	var agencies = req.query.agencies;
 	console.log(agencies);
@@ -154,8 +154,8 @@ router.get('/routes', cache("30 minutes"), (req, res) => {
 			agencies	(STRING): A list of agency IDs which to retrieve segments for. Defaults to __ (University of Rochester)
 			routes 		(STRING): A list of route IDs for which to retrieve segments for, seperated by commas.
 */
-router.get('/segments', cache("30 minutes"), (req, res) => {
-	console.log("^ Route Now Cached For 30 Minutes.");
+router.get('/segments', cache("5 minutes"), (req, res) => {
+	console.log("^ Route Now Cached For 5 Minutes.");
 
 	var agencies 	= req.query.agencies;
 	var routes 		= req.query.routes;
@@ -183,8 +183,8 @@ router.get('/segments', cache("30 minutes"), (req, res) => {
 		OPTIONAL:
 			agencies	(STRING): A list of agency IDs which to retrieve stops for. Defaults to __ (University of Rochester)
 */
-router.get('/stops', cache("30 minutes"), (req, res) => {
-	console.log("^ Route Now Cached For 30 Minutes.");
+router.get('/stops', cache("5 minutes"), (req, res) => {
+	console.log("^ Route Now Cached For 5 Minutes.");
 
 	var agencies = req.query.agencies;
 
@@ -237,7 +237,7 @@ router.get('/vehicles', cache("1.5 seconds"), (req, res) => {
 		OPTIONAL:
 			address	(STRING): An address to geocode
 */
-router.get('/geocode/:address', cache('5 minutes'), (req, res) => {
+router.get('/geocode/:address', cache('10 minutes'), (req, res) => {
 	var address = req.params.address;
 	directions.geocodeAddress(address, function(data){
 		res.status(200).json({"geocode" : data});
@@ -448,7 +448,7 @@ router.get('/closestStop', cache('1 minute'), (req, res) => {
 
 });
 
-router.get('/busgraph', cache('30 minutes'), (req, res) => {
+router.get('/busgraph', cache('5 minutes'), (req, res) => {
 	res.status(200).json(Graph);
 });
 
@@ -481,6 +481,7 @@ module.exports = router;
 
 setupBusGraph();
 
+// Graph[stop_id][next_id] = route_IDs_to_get_there[]
 function setupBusGraph(){
 	console.log("Graph:", Graph);
 
@@ -497,7 +498,7 @@ function setupBusGraph(){
 				var route = routes[x];
 
 				// Only create graoh for active routes
-				if(route.is_active){
+				// if(route.is_active){
 					var route_id 	= route.route_id;
 					var stops 		= route.stops;
 
@@ -506,31 +507,39 @@ function setupBusGraph(){
 						var next = stops[y+1];
 
 						if(Graph[stop]){
-							console.log("Stop visited");
-							Graph[stop][next] = route_id;
+							// console.log("Stop visited");
+							if(Graph[stop][next] == undefined) {
+								Graph[stop][next] = [];
+							}
+							Graph[stop][next].push(route_id);
 						}else{
-							console.log("Not visited");
+							// console.log("Not visited");
 							Graph[stop] = {};
-							Graph[stop][next] = route_id;
+							Graph[stop][next] = [];
+							Graph[stop][next].push(route_id);
 						}
 
-						console.log("STOP: ", stop);
+						// console.log("STOP: ", stop);
 					}
 
-					if(stops.length != 0){
+					if(stops.length > 1){
 						var stop = stops[stops.length-1];
 						var next = stops[0];
 
 						if(Graph[stop]){
-							console.log("Stop visited");
-							Graph[stop][next] = route_id;
+							// console.log("Stop visited");
+							if(Graph[stop][next] == undefined) {
+								Graph[stop][next] = [];
+							}
+							Graph[stop][next].push(route_id);
 						}else{
-							console.log("Not visited");
+							// console.log("Not visited");
 							Graph[stop] = {};
-							Graph[stop][next] = route_id;
+							Graph[stop][next] = [];
+							Graph[stop][next].push(route_id);
 						}
 					}
-				}
+				// }
 
 			}
 

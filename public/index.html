@@ -3,10 +3,19 @@
 
 	<title>URBus | Home</title>
 	<link rel="icon" type="image/png" href="img/logo.png">
+	<script>
+   var loc = window.location.href + ''; // Location as String
+   if (loc.indexOf('www.') == -1) { // Forward to www.URBus.org
+		window.location.href = loc.replace('//', '//www.');
+   }
+   </script>
+
 	<script
   src="https://code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
+
+
 
 	<!-- Latest compiled and minified CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -92,7 +101,7 @@
 			overflow-y:scroll;
 		}
 		/* Mobile */
-		@media only screen and (max-width: 600px) {
+		@media only screen and (max-width: 768px) {
 			#logo {
 				bottom: 8;
 				right: 0;
@@ -103,6 +112,10 @@
 			#routesDisplay {
 				display: none;
 			}
+		}
+		/*Help Icon*/
+		.tooltip.top {
+  			max-width: 11em;
 		}
     </style>
 
@@ -120,7 +133,11 @@
 	          zoom: 15,
 	          center: uluru,
 	          disableDefaultUI: true,
-	          clickableIcons: false
+	          clickableIcons: false,
+				 zoomControl: true,
+				 zoomControlOptions: {
+					 position:  google.maps.ControlPosition.LEFT_BOTTOM
+				 }
 	        });
 	      }
 	    </script>
@@ -235,14 +252,16 @@
 			  </div>
 			<!-- Routes Inserted Here -->
 			<button class="btn btn-primary btn-xs" style="width:100%;margin:auto;" id="reset-view">Revert to Default</button>
+			<button class="btn btn-primary btn-xs" style="width:100%;margin:auto;margin-top:0.4em;" id="uncheckAll">Hide All Routes</button>
 			<button class="btn btn-primary btn-xs" style="width:100%;margin:auto;margin-top:0.4em;" id="show-all-routes-btn">Show Inactive Routes</button>
-
 		  </div>
 		</div>
 
 		</div>
 
 	</div>
+<!-- Help Button -->
+<span id="helpButton" data-toggle="tooltip" style="position:absolute;bottom:0.8em;left:1.1em;font-size:3.3em;"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
 
 </body>
 
